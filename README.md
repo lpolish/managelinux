@@ -39,6 +39,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 
 ## Requirements
 
+### Linux Requirements
 - Debian-based Linux distribution
 - Root or sudo privileges
 - Basic system utilities (fdisk, parted, tar, etc.)
@@ -46,9 +47,18 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 - 20GB free disk space for migrations
 - Docker (for ISO to Docker conversion)
 
+### Windows Requirements
+- Windows 10 or later
+- PowerShell 5.1 or later
+- Administrator privileges
+- Docker Desktop for Windows
+- 7-Zip (automatically installed if missing)
+
 ## Installation
 
-### Quick Start
+### Linux Installation
+
+#### Quick Start
 
 1. One-line installation:
    ```bash
@@ -63,7 +73,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
    ./run.sh
    ```
 
-### Installation Options
+#### Installation Options
 
 The suite can be used in two ways:
 
@@ -80,7 +90,7 @@ The suite can be used in two ways:
    sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # Uninstall
    ```
 
-### Command-line Options
+#### Command-line Options
 
 The `run.sh` script supports the following options:
 
@@ -90,9 +100,9 @@ The `run.sh` script supports the following options:
 - `-u, --uninstall`: Uninstall the suite
 - `-r, --run`: Run the suite (default if no option provided)
 
-## Script Documentation
+#### Script Documentation
 
-### Main Scripts
+##### Main Scripts
 
 1. **run.sh**
    - Main entry point for the suite
@@ -112,7 +122,7 @@ The `run.sh` script supports the following options:
    - Coordinates all suite operations
    - Manages user interactions
 
-### Feature Scripts
+##### Feature Scripts
 
 4. **partition_manager.sh**
    - Handles all partition-related operations
@@ -145,7 +155,7 @@ The `run.sh` script supports the following options:
    - Automatically installs required dependencies
    - Usage: `./iso_to_docker.sh <iso_file> [docker_tag]`
 
-## Project Structure
+#### Project Structure
 
 ```
 linux_quick_manage/
@@ -161,7 +171,7 @@ linux_quick_manage/
 └── LICENSE             # License file
 ```
 
-## Safety Features
+#### Safety Features
 
 - All destructive operations require confirmation
 - Automatic backup creation before migrations
@@ -169,18 +179,78 @@ linux_quick_manage/
 - Backup verification
 - USB boot detection for partition operations
 
-## Contributing
+#### Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
+#### License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+#### Support
 
 For support, please open an issue in the GitHub repository.
 
-## Disclaimer
+#### Disclaimer
 
-This tool performs system-level operations that can potentially damage your system if used incorrectly. Always ensure you have proper backups before performing any operations. The authors are not responsible for any data loss or system damage that may occur from using this tool. 
+This tool performs system-level operations that can potentially damage your system if used incorrectly. Always ensure you have proper backups before performing any operations. The authors are not responsible for any data loss or system damage that may occur from using this tool.
+
+### Windows Installation
+
+1. **Prerequisites**:
+   - Install Docker Desktop for Windows from [Docker's website](https://www.docker.com/products/docker-desktop)
+   - Ensure PowerShell is running with administrator privileges
+
+2. **Installation Options**:
+
+   a. **Quick Installation**:
+   ```powershell
+   # Open PowerShell as Administrator and run:
+   Set-ExecutionPolicy Bypass -Scope Process -Force
+   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lpolish/managelinux/main/windows/install.ps1" -OutFile "install.ps1"
+   .\install.ps1
+   ```
+
+   b. **Manual Installation**:
+   ```powershell
+   # Clone the repository
+   git clone https://github.com/lpolish/managelinux.git
+   cd managelinux/windows
+   
+   # Run the installer
+   .\install.ps1
+   ```
+
+3. **Using the ISO to Docker Converter**:
+   ```powershell
+   # Using the installed version
+   Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -ArgumentList "path\to\your.iso" "custom-tag"
+
+   # Or run directly from the repository
+   .\iso_to_docker.ps1 -IsoPath "path\to\your.iso" -DockerTag "custom-tag"
+   ```
+
+4. **Uninstallation**:
+   ```powershell
+   # Run the uninstaller
+   & "C:\Program Files\ServerMigrationSuite\uninstall.ps1"
+   ```
+
+## Project Structure
+
+```
+linux_quick_manage/
+├── server_migrator.sh    # Main script
+├── partition_manager.sh  # Partition management
+├── migration_manager.sh  # System migration
+├── system_info.sh       # System information
+├── backup_manager.sh    # Backup management
+├── iso_to_docker.sh     # ISO to Docker converter
+├── run.sh              # Entry point script
+├── install.sh          # Installation script
+├── windows/            # Windows-specific scripts
+│   ├── iso_to_docker.ps1  # Windows ISO to Docker converter
+│   └── install.ps1        # Windows installation script
+├── README.md           # Documentation
+└── LICENSE             # License file
+``` 
