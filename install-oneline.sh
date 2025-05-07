@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # One-line installer for Server Migration and Management Suite
-# Usage: curl https://raw.githubusercontent.com/lpolish/managelinux/main/install-oneline.sh | sh
+# Usage: curl @https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh | sh
 
 # Color definitions
 RED='\033[0;31m'
@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Temporary directory for installation
 TEMP_DIR=$(mktemp -d)
-REPO_URL="https://github.com/lpolish/managelinux.git"
+REPO_URL="@https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh"
 
 # Function to cleanup on exit
 cleanup() {
@@ -37,7 +37,7 @@ check_requirements() {
     echo -e "${BLUE}Checking system requirements...${NC}"
     
     # Check if required commands are available
-    local required_commands=("fdisk" "parted" "tar" "dpkg" "apt-get" "git")
+    local required_commands=("fdisk" "parted" "tar" "dpkg" "apt-get" "curl")
     for cmd in "${required_commands[@]}"; do
         if ! command -v "$cmd" &> /dev/null; then
             echo -e "${RED}Required command not found: $cmd${NC}"
@@ -60,19 +60,9 @@ if ! check_requirements; then
     exit 1
 fi
 
-# Clone the repository
-echo -e "${BLUE}Downloading installation files...${NC}"
-if ! git clone "$REPO_URL" "$TEMP_DIR"; then
-    echo -e "${RED}Failed to download installation files${NC}"
-    exit 1
-fi
-
-# Change to the temporary directory
-cd "$TEMP_DIR" || exit 1
-
-# Run the installation script
-echo -e "${BLUE}Running installation...${NC}"
-if ! ./install.sh; then
+# Download and execute the installation script
+echo -e "${BLUE}Downloading and running installation script...${NC}"
+if ! curl -sSL "$REPO_URL" | bash; then
     echo -e "${RED}Installation failed${NC}"
     exit 1
 fi
