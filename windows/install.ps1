@@ -6,6 +6,25 @@ function Test-Administrator {
     return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+# Function to download required files
+function Get-RequiredFiles {
+    $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
+    
+    if (-not (Test-Path $isoToDockerPath)) {
+        Write-Host "Downloading iso_to_docker.ps1..."
+        try {
+            $url = "https://raw.githubusercontent.com/lpolish/managelinux/main/windows/iso_to_docker.ps1"
+            Invoke-WebRequest -Uri $url -OutFile $isoToDockerPath
+            Write-Host "Successfully downloaded iso_to_docker.ps1"
+        }
+        catch {
+            Write-Host "Failed to download iso_to_docker.ps1: $_"
+            exit 1
+        }
+    }
+}
+
 # Function to create installation directory
 function Install-Scripts {
     $installPath = "C:\Program Files\ServerMigrationSuite"
@@ -15,8 +34,18 @@ function Install-Scripts {
         New-Item -ItemType Directory -Path $installPath | Out-Null
     }
     
+    # Get the script directory
+    $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
+    
     # Copy scripts
-    Copy-Item -Path ".\iso_to_docker.ps1" -Destination $installPath -Force
+    if (Test-Path $isoToDockerPath) {
+        Copy-Item -Path $isoToDockerPath -Destination $installPath -Force
+    }
+    else {
+        Write-Host "Error: iso_to_docker.ps1 not found. Please ensure you have downloaded both files."
+        exit 1
+    }
     
     # Create uninstaller
     $uninstallerPath = Join-Path $installPath "uninstall.ps1"
@@ -64,6 +93,9 @@ catch {
     Write-Host "https://www.docker.com/products/docker-desktop"
     exit 1
 }
+
+# Download required files if needed
+Get-RequiredFiles
 
 # Perform installation
 Install-Scripts 

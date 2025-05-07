@@ -203,13 +203,14 @@ This tool performs system-level operations that can potentially damage your syst
 
 2. **Installation Options**:
 
-   a. **Quick Installation**:
+   a. **Quick Installation** (Recommended):
    ```powershell
    # Open PowerShell as Administrator and run:
    Set-ExecutionPolicy Bypass -Scope Process -Force
    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lpolish/managelinux/main/windows/install.ps1" -OutFile "install.ps1"
    .\install.ps1
    ```
+   The installer will automatically download any required files.
 
    b. **Manual Installation**:
    ```powershell
