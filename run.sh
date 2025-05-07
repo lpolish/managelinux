@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# Main Entry Script for Server Migration and Management Suite
+# Repo: https://github.com/lpolish/managelinuxr
+# Version: 1.0.0
+
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Installation paths
+INSTALL_DIR="/usr/local/bin/linux_quick_manage"
+SYMLINK_DIR="/usr/local/bin"
+BIN_NAME="managelinux"
+
+# Function to check if suite is installed
+is_installed() {
+    [ -L "$SYMLINK_DIR/$BIN_NAME" ] && [ -d "$INSTALL_DIR" ]
+}
+
+# Function to show installation status
+show_status() {
+    if is_installed; then
+        echo -e "${GREEN}Server Migration and Management Suite is installed${NC}"
+        echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
+        echo -e "Command: ${YELLOW}$BIN_NAME${NC}"
+        echo -e "To uninstall, run: ${YELLOW}$INSTALL_DIR/uninstall.sh${NC}"
+    else
+        echo -e "${YELLOW}Server Migration and Management Suite is not installed${NC}"
+        echo -e "To install, run: ${YELLOW}sudo ./install.sh${NC}"
+    fi
+}
+
+# Function to show help
+show_help() {
+    echo -e "${BLUE}Server Migration and Management Suite${NC}"
+    echo
+    echo "Usage: $0 [OPTION]"
+    echo
+    echo "Options:"
+    echo "  -h, --help     Show this help message"
+    echo "  -s, --status   Show installation status"
+    echo "  -i, --install  Install the suite"
+    echo "  -u, --uninstall Uninstall the suite"
+    echo "  -r, --run      Run the suite (default if no option provided)"
+    echo
+    echo "Examples:"
+    echo "  $0              # Run the suite"
+    echo "  $0 --status     # Show installation status"
+    echo "  $0 --install    # Install the suite"
+    echo "  $0 --uninstall  # Uninstall the suite"
+}
+
+# Function to handle installation
+handle_install() {
+    if is_installed; then
+        echo -e "${YELLOW}Suite is already installed${NC}"
+        show_status
+        return 1
+    fi
+    
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "${RED}Please run as root or with sudo privileges${NC}"
+        return 1
+    fi
+    
+    ./install.sh
+}
+
+# Function to handle uninstallation
+handle_uninstall() {
+    if ! is_installed; then
+        echo -e "${YELLOW}Suite is not installed${NC}"
+        return 1
+    fi
+    
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "${RED}Please run as root or with sudo privileges${NC}"
+        return 1
+    fi
+    
+    "$INSTALL_DIR/uninstall.sh"
+}
+
+# Function to run the suite
+run_suite() {
+    if is_installed; then
+        # Run from installation directory
+        "$INSTALL_DIR/server_migrator.sh"
+    else
+        # Run from current directory
+        if [ -f "./server_migrator.sh" ]; then
+            ./server_migrator.sh
+        else
+            echo -e "${RED}Error: server_migrator.sh not found${NC}"
+            echo -e "Please run this script from the suite's directory"
+            return 1
+        fi
+    fi
+}
+
+# Main script logic
+case "$1" in
+    -h|--help)
+        show_help
+        ;;
+    -s|--status)
+        show_status
+        ;;
+    -i|--install)
+        handle_install
+        ;;
+    -u|--uninstall)
+        handle_uninstall
+        ;;
+    -r|--run|"")
+        run_suite
+        ;;
+    *)
+        echo -e "${RED}Invalid option: $1${NC}"
+        show_help
+        exit 1
+        ;;
+esac 
