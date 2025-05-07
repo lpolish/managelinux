@@ -1,0 +1,186 @@
+# Server Migration and Management Suite (managelinux)
+
+A comprehensive command-line suite for managing Debian-based Linux servers, with a focus on partition management and system migration capabilities.
+
+## Features
+
+- **Partition Management**
+  - Create, resize, and format partitions
+  - Support for various filesystem types (ext4, xfs, btrfs, ntfs)
+  - Interactive disk selection and management
+  - Safety checks and confirmations
+
+- **System Migration**
+  - Migrate to Ubuntu LTS (22.04)
+  - Migrate to Debian Enterprise
+  - Custom migration support
+  - System requirements checking
+  - Automatic backup before migration
+
+- **System Information**
+  - Comprehensive system overview
+  - Package information and updates
+  - Service status monitoring
+  - Hardware details
+  - System logs viewer
+
+- **Backup Management**
+  - Create system backups
+  - Restore from backups
+  - Backup verification
+  - Backup listing and management
+  - Automatic manifest generation
+
+- **ISO to Docker Conversion**
+  - Convert Linux ISO images to Docker containers
+  - Support for various Linux distributions
+  - Automatic dependency installation
+  - Custom Docker image tagging
+
+## Requirements
+
+- Debian-based Linux distribution
+- Root or sudo privileges
+- Basic system utilities (fdisk, parted, tar, etc.)
+- Minimum 4GB RAM
+- 20GB free disk space for migrations
+- Docker (for ISO to Docker conversion)
+
+## Installation
+
+### Quick Start
+
+1. One-line installation:
+   ```bash
+   curl https://raw.githubusercontent.com/lpolish/managelinux/main/install-oneline.sh | sh
+   ```
+
+2. Or clone and install manually:
+   ```bash
+   git clone https://github.com/lpolish/managelinux.git
+   cd managelinux
+   chmod +x *.sh
+   ./run.sh
+   ```
+
+### Installation Options
+
+The suite can be used in two ways:
+
+1. **Direct Usage** (from the repository directory):
+   ```bash
+   ./run.sh              # Run the suite
+   ./run.sh --status     # Check installation status
+   ```
+
+2. **System-wide Installation**:
+   ```bash
+   sudo ./run.sh --install    # Install the suite system-wide
+   managelinux            # Run the installed suite
+   sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # Uninstall
+   ```
+
+### Command-line Options
+
+The `run.sh` script supports the following options:
+
+- `-h, --help`: Show help message
+- `-s, --status`: Show installation status
+- `-i, --install`: Install the suite system-wide
+- `-u, --uninstall`: Uninstall the suite
+- `-r, --run`: Run the suite (default if no option provided)
+
+## Script Documentation
+
+### Main Scripts
+
+1. **run.sh**
+   - Main entry point for the suite
+   - Handles installation, uninstallation, and execution
+   - Provides command-line interface for all operations
+   - Manages both installed and non-installed usage
+
+2. **install.sh**
+   - Handles system-wide installation
+   - Creates necessary directories and symlinks
+   - Generates uninstaller script
+   - Checks system requirements
+
+3. **server_migrator.sh**
+   - Core functionality script
+   - Provides main menu interface
+   - Coordinates all suite operations
+   - Manages user interactions
+
+### Feature Scripts
+
+4. **partition_manager.sh**
+   - Handles all partition-related operations
+   - Supports creation, resizing, and formatting
+   - Includes safety checks and confirmations
+   - Provides interactive disk selection
+
+5. **migration_manager.sh**
+   - Manages system migrations
+   - Supports Ubuntu LTS and Debian Enterprise
+   - Handles custom migrations
+   - Performs automatic backups
+
+6. **system_info.sh**
+   - Displays comprehensive system information
+   - Shows hardware and software details
+   - Monitors services and packages
+   - Provides system logs viewer
+
+7. **backup_manager.sh**
+   - Manages system backups
+   - Handles backup creation and restoration
+   - Verifies backup integrity
+   - Generates backup manifests
+
+8. **iso_to_docker.sh**
+   - Converts Linux ISO images to Docker containers
+   - Extracts ISO contents and creates Dockerfile
+   - Builds Docker image with custom tags
+   - Automatically installs required dependencies
+   - Usage: `./iso_to_docker.sh <iso_file> [docker_tag]`
+
+## Project Structure
+
+```
+linux_quick_manage/
+├── server_migrator.sh    # Main script
+├── partition_manager.sh  # Partition management
+├── migration_manager.sh  # System migration
+├── system_info.sh       # System information
+├── backup_manager.sh    # Backup management
+├── iso_to_docker.sh     # ISO to Docker converter
+├── run.sh              # Entry point script
+├── install.sh          # Installation script
+├── README.md           # Documentation
+└── LICENSE             # License file
+```
+
+## Safety Features
+
+- All destructive operations require confirmation
+- Automatic backup creation before migrations
+- System requirements checking
+- Backup verification
+- USB boot detection for partition operations
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please open an issue in the GitHub repository.
+
+## Disclaimer
+
+This tool performs system-level operations that can potentially damage your system if used incorrectly. Always ensure you have proper backups before performing any operations. The authors are not responsible for any data loss or system damage that may occur from using this tool. 
