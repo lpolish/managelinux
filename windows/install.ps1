@@ -1,4 +1,4 @@
-# Windows Installation Script for Server Migration Suite
+# Windows Installation Script for ISOToDocker
 
 # Function to check if running as administrator
 function Test-Administrator {
@@ -14,7 +14,7 @@ function Get-RequiredFiles {
     if (-not (Test-Path $isoToDockerPath)) {
         Write-Host "Downloading iso_to_docker.ps1..."
         try {
-            $url = "https://raw.githubusercontent.com/lpolish/managelinux/main/windows/iso_to_docker.ps1"
+            $url = "https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/windows/iso_to_docker.ps1"
             Invoke-WebRequest -Uri $url -OutFile $isoToDockerPath
             Write-Host "Successfully downloaded iso_to_docker.ps1"
         }
@@ -50,13 +50,13 @@ function Install-Scripts {
     # Create uninstaller
     $uninstallerPath = Join-Path $installPath "uninstall.ps1"
     @"
-# Uninstaller for Server Migration Suite
+# Uninstaller for ISOToDocker
 Remove-Item -Path "C:\Program Files\ServerMigrationSuite" -Recurse -Force
-Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Server Migration Suite" -Recurse -Force
+Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker" -Recurse -Force
 "@ | Out-File -FilePath $uninstallerPath -Encoding ASCII
     
     # Create shortcuts
-    $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Server Migration Suite"
+    $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker"
     if (-not (Test-Path $shortcutPath)) {
         New-Item -ItemType Directory -Path $shortcutPath | Out-Null
     }
@@ -68,11 +68,11 @@ Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Server M
     $Shortcut.Save()
     
     Write-Host "Installation completed successfully!"
-    Write-Host "The ISO to Docker Converter is now available in the Start Menu under 'Server Migration Suite'"
+    Write-Host "The ISO to Docker Converter is now available in the Start Menu under 'ISOToDocker'"
 }
 
 # Main script execution
-Write-Host "Server Migration Suite - Windows Installation"
+Write-Host "ISOToDocker - Windows Installation"
 Write-Host "============================================"
 
 # Check if running as administrator
