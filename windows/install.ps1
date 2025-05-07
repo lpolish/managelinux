@@ -6,9 +6,17 @@ function Test-Administrator {
     return $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+# Function to get script directory
+function Get-ScriptDirectory {
+    if ($MyInvocation.MyCommand.Path) {
+        return Split-Path -Parent $MyInvocation.MyCommand.Path
+    }
+    return $PWD.Path
+}
+
 # Function to download required files
 function Get-RequiredFiles {
-    $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $scriptPath = Get-ScriptDirectory
     $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
     
     if (-not (Test-Path $isoToDockerPath)) {
@@ -35,12 +43,13 @@ function Install-Scripts {
     }
     
     # Get the script directory
-    $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $scriptPath = Get-ScriptDirectory
     $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
     
     # Copy scripts
     if (Test-Path $isoToDockerPath) {
         Copy-Item -Path $isoToDockerPath -Destination $installPath -Force
+        Write-Host "Copied iso_to_docker.ps1 to $installPath"
     }
     else {
         Write-Host "Error: iso_to_docker.ps1 not found. Please ensure you have downloaded both files."
