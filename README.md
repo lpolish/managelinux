@@ -52,7 +52,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 
 1. One-line installation:
    ```bash
-   curl @https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh | sh
+   curl @https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install-oneline.sh | sh
    ```
 
 2. Or clone and install manually:
