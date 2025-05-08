@@ -53,7 +53,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 - Windows 10 or later
 - PowerShell 5.1 or later
 - Administrator privileges
-- Docker Desktop for Windows
+- Docker Desktop for Windows (for ISO to Docker conversion)
 - 7-Zip (automatically installed if missing)
 
 ## Installation
@@ -267,33 +267,38 @@ This tool performs system-level operations that can potentially damage your syst
 
 3. **Using the ISO to Docker Converter**:
    ```powershell
-   # Using the installed version (GUI)
+   # Using the installed version
    Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -Verb RunAs
 
-   # Or run directly from the repository (GUI)
-   .\iso_to_docker.ps1
-
-   # Command-line version (alternative)
+   # Or run directly from the repository
    .\iso_to_docker.ps1 -IsoPath "path\to\your.iso" -DockerTag "custom-tag"
    ```
 
+   Features:
+   - Automatic 7-Zip installation if missing
+   - Progress feedback during extraction
+   - Error handling and validation
+   - Clean temporary files
+   - Interactive user prompts
+   - Color-coded output for better visibility
+
 4. **Creating Live USB**:
    ```powershell
-   # Using the installed version (GUI)
-   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb_gui.ps1" -Verb RunAs
+   # Using the installed version
+   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb.ps1" -Verb RunAs
 
-   # Or run directly from the repository (GUI)
-   .\create_live_usb_gui.ps1
-
-   # Command-line version (alternative)
+   # Or run directly from the repository
    .\create_live_usb.ps1
    ```
-   The GUI application provides:
-   - User-friendly interface for USB drive selection
-   - Progress indicators for downloads and operations
-   - Automatic Rufus installation if needed
-   - Status updates during the process
-   - Start Menu and Desktop shortcuts for easy access
+
+   Features:
+   - Automatic Rufus installation if missing
+   - USB drive detection and validation
+   - Automatic Ubuntu ISO download
+   - Progress feedback during operations
+   - Error handling and validation
+   - Interactive user prompts
+   - Color-coded output for better visibility
 
 5. **Uninstallation**:
    ```powershell
@@ -317,8 +322,7 @@ linux_quick_manage/
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
 │   ├── iso_to_docker.ps1      # Windows ISO to Docker converter
-│   ├── create_live_usb.ps1    # Windows Live USB creator (CLI)
-│   ├── create_live_usb_gui.ps1 # Windows Live USB creator (GUI)
+│   ├── create_live_usb.ps1    # Windows Live USB creator
 │   └── install.ps1            # Windows installation script
 ├── README.md           # Documentation
 └── LICENSE             # License file
