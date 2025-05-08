@@ -1,4 +1,4 @@
-# Windows Installation Script for ISOToDocker
+﻿# Windows Installation Script for ISOToDocker
 
 # Function to check if running as administrator
 function Test-Administrator {
