@@ -25,77 +25,63 @@ function Get-ScriptDirectory {
     }
 }
 
-# Function to download required files
-function Get-RequiredFiles {
+# Function to build WPF application
+function Build-WpfApplication {
     try {
+        Write-Host "`nBuilding WPF Live USB Creator application..."
         $scriptPath = Get-ScriptDirectory
-        Write-Host "Script directory: $scriptPath"
+        $wpfProjectPath = Join-Path $scriptPath "..\LiveUsbCreator"
         
-        $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
-        Write-Host "Looking for iso_to_docker.ps1 at: $isoToDockerPath"
-        
-        if (-not (Test-Path $isoToDockerPath)) {
-            Write-Host "Downloading iso_to_docker.ps1..."
-            try {
-                $url = "https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/windows/iso_to_docker.ps1"
-                Invoke-WebRequest -Uri $url -OutFile $isoToDockerPath
-                Write-Host "Successfully downloaded iso_to_docker.ps1"
-            }
-            catch {
-                Write-Host "Failed to download iso_to_docker.ps1: $_"
-                exit 1
-            }
+        if (-not (Test-Path $wpfProjectPath)) {
+            throw "WPF project directory not found at: $wpfProjectPath"
         }
-        else {
-            Write-Host "Found existing iso_to_docker.ps1"
+
+        # Check if .NET SDK is installed
+        try {
+            $dotnetVersion = dotnet --version
+            Write-Host "Found .NET SDK version: $dotnetVersion"
         }
+        catch {
+            throw ".NET SDK is not installed. Please install .NET 6.0 SDK or later."
+        }
+
+        # Create Resources directory if it doesn't exist
+        $resourcesPath = Join-Path $wpfProjectPath "LiveUsbCreator\Resources"
+        if (-not (Test-Path $resourcesPath)) {
+            New-Item -ItemType Directory -Path $resourcesPath | Out-Null
+        }
+
+        # Create a simple USB icon if it doesn't exist
+        $iconPath = Join-Path $resourcesPath "usb-icon.ico"
+        if (-not (Test-Path $iconPath)) {
+            Write-Host "Creating default USB icon..."
+            # TODO: Create or download a proper USB icon
+            # For now, we'll use a system icon
+            Copy-Item "C:\Windows\System32\shell32.dll,7" -Destination $iconPath
+        }
+
+        # Build the application
+        Write-Host "Building WPF application..."
+        Push-Location $wpfProjectPath
+        dotnet build -c Release
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to build WPF application"
+        }
+        Pop-Location
+
+        # Get the built executable path
+        $exePath = Join-Path $wpfProjectPath "LiveUsbCreator\bin\Release\net6.0-windows\LiveUsbCreator.exe"
+        if (-not (Test-Path $exePath)) {
+            throw "Built executable not found at: $exePath"
+        }
+
+        Write-Host "✓ WPF application built successfully"
+        return $exePath
     }
     catch {
-        Write-Host "Error in Get-RequiredFiles: $_"
-        exit 1
+        Write-Host "Error building WPF application: $_"
+        return $null
     }
-}
-
-# Function to verify installation
-function Test-Installation {
-    param (
-        [string]$installPath,
-        [string]$cmdPath
-    )
-    
-    Write-Host "`nVerifying installation..."
-    
-    # Check installation directory
-    if (-not (Test-Path $installPath)) {
-        Write-Host "Error: Installation directory not found at $installPath"
-        return $false
-    }
-    Write-Host "✓ Installation directory exists"
-    
-    # Check iso_to_docker.ps1
-    $scriptPath = Join-Path $installPath "iso_to_docker.ps1"
-    if (-not (Test-Path $scriptPath)) {
-        Write-Host "Error: iso_to_docker.ps1 not found at $scriptPath"
-        return $false
-    }
-    Write-Host "✓ iso_to_docker.ps1 found"
-    
-    # Check command file
-    if (-not (Test-Path $cmdPath)) {
-        Write-Host "Error: Command file not found at $cmdPath"
-        return $false
-    }
-    Write-Host "✓ Command file found"
-    
-    # Check command file size (should be non-zero)
-    $fileInfo = Get-Item $cmdPath
-    if ($fileInfo.Length -eq 0) {
-        Write-Host "Error: Command file is empty"
-        return $false
-    }
-    Write-Host "✓ Command file size verified"
-    
-    return $true
 }
 
 # Function to create shortcut
@@ -136,41 +122,64 @@ function Install-Scripts {
         
         # Get the script directory
         $scriptPath = Get-ScriptDirectory
-        $isoToDockerPath = Join-Path $scriptPath "iso_to_docker.ps1"
         
-        # Copy scripts
-        if (Test-Path $isoToDockerPath) {
-            Write-Host "Copying iso_to_docker.ps1 to $installPath"
-            Copy-Item -Path $isoToDockerPath -Destination $installPath -Force
-            if (-not (Test-Path (Join-Path $installPath "iso_to_docker.ps1"))) {
-                throw "Failed to copy iso_to_docker.ps1"
+        # Build and copy WPF application
+        $wpfExePath = Build-WpfApplication
+        if ($wpfExePath) {
+            Write-Host "Copying WPF application to installation directory..."
+            Copy-Item -Path $wpfExePath -Destination $installPath -Force
+            if (-not (Test-Path (Join-Path $installPath "LiveUsbCreator.exe"))) {
+                throw "Failed to copy WPF application"
+            }
+            Write-Host "✓ WPF application copied successfully"
+        }
+        
+        # Copy terminal-based scripts
+        $scripts = @(
+            "create_live_usb.ps1",
+            "iso_to_docker.ps1"
+        )
+        
+        foreach ($script in $scripts) {
+            $sourcePath = Join-Path $scriptPath $script
+            if (Test-Path $sourcePath) {
+                Write-Host "Copying $script to $installPath"
+                Copy-Item -Path $sourcePath -Destination $installPath -Force
+                if (-not (Test-Path (Join-Path $installPath $script))) {
+                    throw "Failed to copy $script"
+                }
             }
         }
-        else {
-            throw "Error: iso_to_docker.ps1 not found at $isoToDockerPath"
-        }
-        Write-Host "✓ Scripts copied successfully"
+        Write-Host "✓ Terminal scripts copied successfully"
 
-        # Create global command (command-line mode)
+        # Create global commands (command-line mode)
         $system32Path = [Environment]::GetFolderPath("System")
-        $cmdPath = Join-Path $system32Path "isotodocker.cmd"
-        Write-Host "Creating global command at: $cmdPath"
-        @"
-@echo off
-powershell.exe -ExecutionPolicy Bypass -File "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" %*
-"@ | Out-File -FilePath $cmdPath -Encoding ASCII
-        if (-not (Test-Path $cmdPath)) {
-            throw "Failed to create command file"
+        $commands = @{
+            "createliveusb.cmd" = "create_live_usb.ps1"
+            "isotodocker.cmd" = "iso_to_docker.ps1"
         }
-        Write-Host "✓ Global command created"
+        
+        foreach ($cmd in $commands.GetEnumerator()) {
+            $cmdPath = Join-Path $system32Path $cmd.Key
+            Write-Host "Creating global command at: $cmdPath"
+            @"
+@echo off
+powershell.exe -ExecutionPolicy Bypass -File "C:\Program Files\ServerMigrationSuite\$($cmd.Value)" %*
+"@ | Out-File -FilePath $cmdPath -Encoding ASCII
+            if (-not (Test-Path $cmdPath)) {
+                throw "Failed to create command file $($cmd.Key)"
+            }
+        }
+        Write-Host "✓ Global commands created"
         
         # Create uninstaller
         $uninstallerPath = Join-Path $installPath "uninstall.ps1"
         Write-Host "Creating uninstaller at: $uninstallerPath"
         @"
-# Uninstaller for ISOToDocker
+# Uninstaller for Server Migration Suite
 Remove-Item -Path "C:\Program Files\ServerMigrationSuite" -Recurse -Force
-Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker" -Recurse -Force
+Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Server Migration Suite" -Recurse -Force
+Remove-Item -Path "$([Environment]::GetFolderPath('System'))\createliveusb.cmd" -Force
 Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -Force
 "@ | Out-File -FilePath $uninstallerPath -Encoding ASCII
         if (-not (Test-Path $uninstallerPath)) {
@@ -188,59 +197,52 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             }
         }
         
-        # Create GUI shortcut (Start Menu)
-        Write-Host "Creating Start Menu shortcut (GUI mode)"
-        New-Shortcut -TargetPath "powershell.exe" `
-            -ShortcutPath "$startMenuPath\ISO to Docker Converter.lnk" `
-            -Description "Convert ISO to Docker Image (GUI)" `
-            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`"" `
-            -IconPath "shell32.dll,7"
-        if (-not (Test-Path "$startMenuPath\ISO to Docker Converter.lnk")) {
-            throw "Failed to create Start Menu shortcut"
-        }
-        Write-Host "✓ Start Menu shortcut created"
-
-        # Create command-line shortcut (Start Menu)
-        Write-Host "Creating command-line shortcut in Start Menu"
-        New-Shortcut -TargetPath "powershell.exe" `
-            -ShortcutPath "$startMenuPath\ISO to Docker Converter (Command Line).lnk" `
-            -Description "ISO to Docker Converter (Command Line Mode)" `
-            -IconPath "shell32.dll,7" `
-            -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$installPath\iso_to_docker.ps1`""
-        if (-not (Test-Path "$startMenuPath\ISO to Docker Converter (Command Line).lnk")) {
-            throw "Failed to create command-line shortcut"
-        }
-        Write-Host "✓ Command-line shortcut created"
-        
-        # Create Desktop shortcuts (optional)
-        $desktopPath = [Environment]::GetFolderPath("Desktop")
-        New-Shortcut -TargetPath "powershell.exe" `
-            -ShortcutPath "$desktopPath\ISO to Docker Converter.lnk" `
-            -Description "Convert ISO to Docker Image (GUI)" `
-            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`"" `
-            -IconPath "shell32.dll,7"
-        New-Shortcut -TargetPath "powershell.exe" `
-            -ShortcutPath "$desktopPath\Create Live USB.lnk" `
-            -Description "Create Ubuntu 22.04 Live USB (GUI)" `
-            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\create_live_usb_gui.ps1`"" `
-            -IconPath "shell32.dll,7"
-        
-        # Verify installation
-        if (-not (Test-Installation -installPath $installPath -cmdPath $cmdPath)) {
-            throw "Installation verification failed"
+        # Create shortcuts for terminal-based tools
+        $terminalShortcuts = @{
+            "Create Live USB (Terminal)" = "create_live_usb.ps1"
+            "ISO to Docker Converter (Terminal)" = "iso_to_docker.ps1"
         }
         
-        Write-Host "`nInstallation completed successfully!"
-        Write-Host "The ISO to Docker Converter is available in two modes:"
-        Write-Host "1. GUI Mode: Use the Start Menu shortcut 'ISO to Docker Converter'"
-        Write-Host "2. Command Line Mode: Use 'isotodocker' command in PowerShell or Command Prompt"
-        Write-Host "`nTo test the command-line mode, try running: isotodocker --help"
-        Write-Host "Applications are available in the Start Menu under 'Server Migration Suite'"
-        Write-Host "Desktop shortcuts have also been created for easy access."
+        foreach ($shortcut in $terminalShortcuts.GetEnumerator()) {
+            Write-Host "Creating Start Menu shortcut: $($shortcut.Key)"
+            New-Shortcut -TargetPath "powershell.exe" `
+                -ShortcutPath "$startMenuPath\$($shortcut.Key).lnk" `
+                -Description $shortcut.Key `
+                -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\$($shortcut.Value)`"" `
+                -IconPath "shell32.dll,7"
+        }
+        
+        # Create shortcut for WPF Live USB Creator
+        $wpfAppPath = Join-Path $installPath "LiveUsbCreator.exe"
+        if (Test-Path $wpfAppPath) {
+            Write-Host "Creating Start Menu shortcut for WPF Live USB Creator"
+            New-Shortcut -TargetPath $wpfAppPath `
+                -ShortcutPath "$startMenuPath\Create Live USB.lnk" `
+                -Description "Create Live USB (Modern GUI)" `
+                -IconPath "$wpfAppPath,0"
+        }
+        
+        Write-Host "✓ Start Menu shortcuts created"
+        
+        # Remove old GUI scripts
+        $oldGuiScripts = @(
+            "create_live_usb_gui.ps1",
+            "iso_to_docker_gui.ps1"
+        )
+        
+        foreach ($script in $oldGuiScripts) {
+            $scriptPath = Join-Path $installPath $script
+            if (Test-Path $scriptPath) {
+                Write-Host "Removing old GUI script: $script"
+                Remove-Item -Path $scriptPath -Force
+            }
+        }
+        
+        return $true
     }
     catch {
         Write-Host "Error in Install-Scripts: $_"
-        exit 1
+        return $false
     }
 }
 
@@ -306,7 +308,7 @@ function Uninstall-Application {
 }
 
 # Main script execution
-Write-Host "ISOToDocker - Windows Installation"
+Write-Host "Server Migration Suite - Windows Installation"
 Write-Host "============================================"
 
 # Check if running as administrator
@@ -322,20 +324,25 @@ if ($args -contains "--uninstall") {
     exit 0
 }
 
-# Check if Docker is installed
+# Check if .NET SDK is installed
 try {
-    $dockerVersion = docker --version
-    Write-Host "Docker is installed: $dockerVersion"
+    $dotnetVersion = dotnet --version
+    Write-Host "Found .NET SDK version: $dotnetVersion"
 }
 catch {
-    Write-Host "Docker is not installed or not in PATH"
-    Write-Host "Please install Docker Desktop for Windows first:"
-    Write-Host "https://www.docker.com/products/docker-desktop"
+    Write-Host ".NET SDK is not installed. Please install .NET 6.0 SDK or later."
+    Write-Host "Download from: https://dotnet.microsoft.com/download/dotnet/6.0"
     exit 1
 }
 
-# Download required files if needed
-Get-RequiredFiles
-
 # Perform installation
-Install-Scripts 
+$success = Install-Scripts
+
+if ($success) {
+    Write-Host "`nInstallation completed successfully!"
+    Write-Host "You can find the tools in the Start Menu under 'Server Migration Suite'"
+}
+else {
+    Write-Host "`nInstallation failed. Please check the error messages above."
+    exit 1
+} 
