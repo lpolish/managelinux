@@ -274,7 +274,22 @@ This tool performs system-level operations that can potentially damage your syst
    .\iso_to_docker.ps1 -IsoPath "path\to\your.iso" -DockerTag "custom-tag"
    ```
 
-4. **Uninstallation**:
+4. **Creating Live USB**:
+   ```powershell
+   # Using the installed version
+   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb.ps1" -Verb RunAs
+
+   # Or run directly from the repository
+   .\create_live_usb.ps1
+   ```
+   The script will:
+   - List available USB drives
+   - Download Ubuntu 22.04 ISO if not present
+   - Install Rufus if not already installed
+   - Create a bootable USB drive
+   - Show progress and completion status
+
+5. **Uninstallation**:
    ```powershell
    # Run the uninstaller
    & "C:\Program Files\ServerMigrationSuite\uninstall.ps1"
@@ -296,6 +311,7 @@ linux_quick_manage/
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
 │   ├── iso_to_docker.ps1  # Windows ISO to Docker converter
+│   ├── create_live_usb.ps1 # Windows Live USB creator
 │   └── install.ps1        # Windows installation script
 ├── README.md           # Documentation
 └── LICENSE             # License file
