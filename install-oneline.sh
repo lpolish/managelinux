@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # One-line installer for Server Migration and Management Suite
-# Usage: curl @https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh | sh
+# Usage: curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh | sh
 
 # Color definitions
 RED='\033[0;31m'
@@ -12,7 +12,7 @@ NC='\033[0m' # No Color
 
 # Temporary directory for installation
 TEMP_DIR=$(mktemp -d)
-REPO_URL="@https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh"
+REPO_URL="https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install.sh"
 
 # Function to cleanup on exit
 cleanup() {
