@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Installation paths
-INSTALL_DIR="/usr/local/lib/managelinux"
+INSTALL_DIR="/usr/local/bin/linux_quick_manage"
 SYMLINK_DIR="/usr/local/bin"
 BIN_NAME="managelinux"
 
@@ -124,7 +124,6 @@ run_suite() {
             ./server_migrator.sh
         else
             echo -e "${RED}Error: server_migrator.sh not found${NC}"
-            echo -e "Please run this script from the suite's directory"
             return 1
         fi
     fi
