@@ -42,11 +42,39 @@ echo -e "${BLUE}Creating symlink...${NC}"
 ln -sf "$INSTALL_DIR/server_migrator.sh" "$SYMLINK_DIR/$BIN_NAME"
 
 # Verify installation
-if [ -L "$SYMLINK_DIR/$BIN_NAME" ] && [ -d "$INSTALL_DIR" ]; then
-    echo -e "${GREEN}Installation completed successfully!${NC}"
-    echo -e "You can now run the suite using: ${YELLOW}$BIN_NAME${NC}"
-    echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
+if [ -L "$SYMLINK_DIR/$BIN_NAME" ] && [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
+    # Verify all required scripts are present
+    required_scripts=("server_migrator.sh" "partition_manager.sh" "migration_manager.sh" "system_info.sh" "backup_manager.sh")
+    missing_scripts=()
+    
+    for script in "${required_scripts[@]}"; do
+        if [ ! -f "$INSTALL_DIR/$script" ]; then
+            missing_scripts+=("$script")
+        fi
+    done
+    
+    if [ ${#missing_scripts[@]} -eq 0 ]; then
+        echo -e "${GREEN}Installation completed successfully!${NC}"
+        echo -e "You can now run the suite using: ${YELLOW}$BIN_NAME${NC}"
+        echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
+    else
+        echo -e "${RED}Installation incomplete. Missing scripts:${NC}"
+        for script in "${missing_scripts[@]}"; do
+            echo -e "${RED}- $script${NC}"
+        done
+        echo -e "${YELLOW}Please try reinstalling.${NC}"
+        exit 1
+    fi
 else
     echo -e "${RED}Installation failed${NC}"
+    if [ ! -L "$SYMLINK_DIR/$BIN_NAME" ]; then
+        echo -e "${RED}- Failed to create symlink${NC}"
+    fi
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${RED}- Failed to create installation directory${NC}"
+    fi
+    if [ ! -f "$INSTALL_DIR/server_migrator.sh" ]; then
+        echo -e "${RED}- Failed to copy server_migrator.sh${NC}"
+    fi
     exit 1
 fi 

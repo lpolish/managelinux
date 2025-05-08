@@ -117,13 +117,24 @@ handle_update() {
 run_suite() {
     if is_installed; then
         # Run from installation directory
-        "$INSTALL_DIR/server_migrator.sh"
+        if [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
+            "$INSTALL_DIR/server_migrator.sh"
+        else
+            echo -e "${RED}Error: server_migrator.sh not found in $INSTALL_DIR${NC}"
+            echo -e "${YELLOW}The installation may be corrupted. Please try:${NC}"
+            echo -e "1. Uninstall: ${YELLOW}sudo $INSTALL_DIR/uninstall.sh${NC}"
+            echo -e "2. Reinstall: ${YELLOW}sudo ./install.sh${NC}"
+            return 1
+        fi
     else
         # Run from current directory
         if [ -f "./server_migrator.sh" ]; then
             ./server_migrator.sh
         else
             echo -e "${RED}Error: server_migrator.sh not found${NC}"
+            echo -e "${YELLOW}Please run this script from the suite's directory or install it first:${NC}"
+            echo -e "1. Install: ${YELLOW}sudo ./install.sh${NC}"
+            echo -e "2. Or run: ${YELLOW}sudo ./run.sh --install${NC}"
             return 1
         fi
     fi
