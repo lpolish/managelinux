@@ -21,8 +21,34 @@ check_usb_boot() {
 # Function to list available disks
 list_disks() {
     echo -e "${BLUE}Available Disks:${NC}"
-    lsblk -d -o NAME,SIZE,MODEL
+    echo -e "${YELLOW}Device\tSize\tModel${NC}"
+    echo "----------------------------------------"
+    lsblk -d -o NAME,SIZE,MODEL | grep -v "NAME" | while read -r line; do
+        echo -e "${GREEN}$line${NC}"
+    done
     echo
+}
+
+# Function to show detailed partition information
+show_partitions() {
+    echo -e "${BLUE}Detailed Partition Information:${NC}"
+    echo -e "${YELLOW}Device\t\tSize\tType\t\tMount Point\tFilesystem${NC}"
+    echo "--------------------------------------------------------------------------------"
+    
+    # Get partition information using lsblk
+    lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE | grep -v "NAME" | while read -r line; do
+        # Skip empty lines and disk devices (only show partitions)
+        if [[ $line == *"part"* ]] || [[ $line == *"lvm"* ]]; then
+            echo -e "${GREEN}$line${NC}"
+        fi
+    done
+    
+    echo
+    echo -e "${BLUE}Additional Information:${NC}"
+    echo -e "${YELLOW}Disk Usage Summary:${NC}"
+    df -h | grep -v "tmpfs" | grep -v "udev" | while read -r line; do
+        echo -e "${GREEN}$line${NC}"
+    done
 }
 
 # Function to create new partition
@@ -59,8 +85,7 @@ resize_partition() {
         return 1
     fi
     
-    echo -e "${BLUE}Partitions on $disk:${NC}"
-    fdisk -l "$disk"
+    show_partitions
     echo
     
     read -p "Enter partition number to resize (e.g., 1): " partition
@@ -94,8 +119,7 @@ format_partition() {
         return 1
     fi
     
-    echo -e "${BLUE}Partitions on $disk:${NC}"
-    fdisk -l "$disk"
+    show_partitions
     echo
     
     read -p "Enter partition number to format (e.g., 1): " partition
@@ -162,8 +186,6 @@ case "$1" in
         format_partition
         ;;
     *)
-        echo -e "${RED}Invalid command${NC}"
-        echo "Usage: $0 {create|resize|format}"
-        exit 1
+        show_partitions
         ;;
 esac 
