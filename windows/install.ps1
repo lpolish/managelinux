@@ -80,6 +80,23 @@ function Install-Scripts {
             Write-Host "Error: iso_to_docker.ps1 not found at $isoToDockerPath"
             exit 1
         }
+
+        # Create command-line shortcut
+        $cmdPath = Join-Path $installPath "isotodocker.cmd"
+        @"
+@echo off
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0iso_to_docker.ps1" %*
+"@ | Out-File -FilePath $cmdPath -Encoding ASCII
+        Write-Host "Created command-line shortcut: $cmdPath"
+        
+        # Add to system PATH if not already present
+        $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        if (-not $currentPath.Contains($installPath)) {
+            Write-Host "Adding installation directory to system PATH"
+            $newPath = $currentPath + ";" + $installPath
+            [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+            Write-Host "Added to system PATH. You may need to restart your terminal for changes to take effect."
+        }
         
         # Create uninstaller
         $uninstallerPath = Join-Path $installPath "uninstall.ps1"
@@ -88,6 +105,11 @@ function Install-Scripts {
 # Uninstaller for ISOToDocker
 Remove-Item -Path "C:\Program Files\ServerMigrationSuite" -Recurse -Force
 Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker" -Recurse -Force
+
+# Remove from PATH
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+$newPath = ($currentPath.Split(';') | Where-Object { $_ -ne "C:\Program Files\ServerMigrationSuite" }) -join ';'
+[Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
 "@ | Out-File -FilePath $uninstallerPath -Encoding ASCII
         
         # Create shortcuts
@@ -105,7 +127,9 @@ Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDoc
         $Shortcut.Save()
         
         Write-Host "Installation completed successfully!"
-        Write-Host "The ISO to Docker Converter is now available in the Start Menu under 'ISOToDocker'"
+        Write-Host "The ISO to Docker Converter is now available as 'isotodocker' command"
+        Write-Host "You can also find it in the Start Menu under 'ISOToDocker'"
+        Write-Host "Note: You may need to restart your terminal for the command to be available"
     }
     catch {
         Write-Host "Error in Install-Scripts: $_"
