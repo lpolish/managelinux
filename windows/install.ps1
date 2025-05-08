@@ -214,6 +214,46 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
     }
 }
 
+# Function to uninstall the application
+function Uninstall-Application {
+    try {
+        Write-Host "`nStarting uninstallation process..."
+        
+        # Define paths
+        $installPath = "C:\Program Files\ServerMigrationSuite"
+        $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker"
+        $cmdPath = Join-Path ([Environment]::GetFolderPath("System")) "isotodocker.cmd"
+        
+        # Remove command file
+        if (Test-Path $cmdPath) {
+            Write-Host "Removing command file: $cmdPath"
+            Remove-Item -Path $cmdPath -Force
+            Write-Host "✓ Command file removed"
+        }
+        
+        # Remove Start Menu shortcuts
+        if (Test-Path $shortcutPath) {
+            Write-Host "Removing Start Menu shortcuts: $shortcutPath"
+            Remove-Item -Path $shortcutPath -Recurse -Force
+            Write-Host "✓ Start Menu shortcuts removed"
+        }
+        
+        # Remove installation directory
+        if (Test-Path $installPath) {
+            Write-Host "Removing installation directory: $installPath"
+            Remove-Item -Path $installPath -Recurse -Force
+            Write-Host "✓ Installation directory removed"
+        }
+        
+        Write-Host "`nUninstallation completed successfully!"
+        Write-Host "All ISO to Docker Converter components have been removed from your system."
+    }
+    catch {
+        Write-Host "Error during uninstallation: $_"
+        exit 1
+    }
+}
+
 # Main script execution
 Write-Host "ISOToDocker - Windows Installation"
 Write-Host "============================================"
@@ -223,6 +263,12 @@ if (-not (Test-Administrator)) {
     Write-Host "This script requires administrator privileges."
     Write-Host "Please run PowerShell as Administrator and try again."
     exit 1
+}
+
+# Check for uninstall option
+if ($args -contains "--uninstall") {
+    Uninstall-Application
+    exit 0
 }
 
 # Check if Docker is installed
