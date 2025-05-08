@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Uninstaller for Server Migration and Management Suite
+# One-line uninstaller for Server Migration and Management Suite
 # Repo: https://github.com/lpolish/managelinuxr
 # Version: 1.0.0
 
