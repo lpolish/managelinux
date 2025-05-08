@@ -133,7 +133,7 @@ function Install-Scripts {
         }
         Write-Host "✓ Scripts copied successfully"
 
-        # Create global command
+        # Create global command (command-line mode)
         $system32Path = [Environment]::GetFolderPath("System")
         $cmdPath = Join-Path $system32Path "isotodocker.cmd"
         Write-Host "Creating global command at: $cmdPath"
@@ -170,16 +170,32 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             }
         }
         
-        Write-Host "Creating Start Menu shortcut"
+        # Create GUI shortcut (Start Menu)
+        Write-Host "Creating Start Menu shortcut (GUI mode)"
         $WshShell = New-Object -ComObject WScript.Shell
         $Shortcut = $WshShell.CreateShortcut("$shortcutPath\ISO to Docker Converter.lnk")
         $Shortcut.TargetPath = "powershell.exe"
-        $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$installPath\iso_to_docker.ps1`""
+        $Shortcut.Arguments = "-ExecutionPolicy Bypass -WindowStyle Normal -File `"$installPath\iso_to_docker.ps1`""
+        $Shortcut.WorkingDirectory = $installPath
+        $Shortcut.Description = "ISO to Docker Converter (GUI Mode)"
         $Shortcut.Save()
         if (-not (Test-Path "$shortcutPath\ISO to Docker Converter.lnk")) {
             throw "Failed to create Start Menu shortcut"
         }
         Write-Host "✓ Start Menu shortcut created"
+
+        # Create command-line shortcut (Start Menu)
+        Write-Host "Creating command-line shortcut in Start Menu"
+        $Shortcut = $WshShell.CreateShortcut("$shortcutPath\ISO to Docker Converter (Command Line).lnk")
+        $Shortcut.TargetPath = "powershell.exe"
+        $Shortcut.Arguments = "-ExecutionPolicy Bypass -NoExit -File `"$installPath\iso_to_docker.ps1`""
+        $Shortcut.WorkingDirectory = $installPath
+        $Shortcut.Description = "ISO to Docker Converter (Command Line Mode)"
+        $Shortcut.Save()
+        if (-not (Test-Path "$shortcutPath\ISO to Docker Converter (Command Line).lnk")) {
+            throw "Failed to create command-line shortcut"
+        }
+        Write-Host "✓ Command-line shortcut created"
         
         # Verify installation
         if (-not (Test-Installation -installPath $installPath -cmdPath $cmdPath)) {
@@ -187,9 +203,10 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
         }
         
         Write-Host "`nInstallation completed successfully!"
-        Write-Host "The ISO to Docker Converter is now available as 'isotodocker' command"
-        Write-Host "You can also find it in the Start Menu under 'ISOToDocker'"
-        Write-Host "`nTo test the installation, try running: isotodocker --help"
+        Write-Host "The ISO to Docker Converter is available in two modes:"
+        Write-Host "1. GUI Mode: Use the Start Menu shortcut 'ISO to Docker Converter'"
+        Write-Host "2. Command Line Mode: Use 'isotodocker' command in PowerShell or Command Prompt"
+        Write-Host "`nTo test the command-line mode, try running: isotodocker --help"
     }
     catch {
         Write-Host "Error in Install-Scripts: $_"
