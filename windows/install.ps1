@@ -25,6 +25,25 @@ function Get-ScriptDirectory {
     }
 }
 
+# Function to delete script after execution
+function Remove-Script {
+    try {
+        $scriptPath = $MyInvocation.MyCommand.Path
+        if ($scriptPath) {
+            Write-Host "`nCleaning up installation script..."
+            # Create a scheduled task to delete the script after PowerShell exits
+            $action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c del `"$scriptPath`""
+            $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(2)
+            $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+            Register-ScheduledTask -TaskName "DeleteInstallScript" -Action $action -Trigger $trigger -Settings $settings -Force | Out-Null
+            Write-Host "✓ Installation script will be removed"
+        }
+    }
+    catch {
+        Write-Host "Warning: Could not schedule script removal: $_"
+    }
+}
+
 # Function to install .NET SDK
 function Install-DotNetSdk {
     try {
@@ -389,6 +408,7 @@ $success = Install-Scripts
 if ($success) {
     Write-Host "`nInstallation completed successfully!"
     Write-Host "You can find the tools in the Start Menu under 'Server Migration Suite'"
+    Remove-Script
 }
 else {
     Write-Host "`nInstallation failed. Please check the error messages above."
