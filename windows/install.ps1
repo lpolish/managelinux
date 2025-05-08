@@ -25,6 +25,69 @@ function Get-ScriptDirectory {
     }
 }
 
+# Function to install .NET SDK
+function Install-DotNetSdk {
+    try {
+        Write-Host "`nChecking .NET SDK installation..."
+        
+        # Check if .NET SDK is already installed
+        try {
+            $dotnetVersion = dotnet --version
+            Write-Host "Found .NET SDK version: $dotnetVersion"
+            return $true
+        }
+        catch {
+            Write-Host ".NET SDK not found, proceeding with installation..."
+        }
+
+        # Create temporary directory for download
+        $tempDir = Join-Path $env:TEMP "dotnet-install"
+        if (-not (Test-Path $tempDir)) {
+            New-Item -ItemType Directory -Path $tempDir | Out-Null
+        }
+
+        # Download .NET SDK installer
+        $installerUrl = "https://dot.net/v1/dotnet-install.ps1"
+        $installerPath = Join-Path $tempDir "dotnet-install.ps1"
+        
+        Write-Host "Downloading .NET SDK installer..."
+        Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath
+        
+        # Install .NET SDK 6.0
+        Write-Host "Installing .NET SDK 6.0..."
+        & $installerPath -Channel 6.0 -Version latest -InstallDir "C:\Program Files\dotnet" -NoPath
+        
+        # Add to PATH if not already present
+        $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        $dotnetPath = "C:\Program Files\dotnet"
+        if (-not $currentPath.Contains($dotnetPath)) {
+            [Environment]::SetEnvironmentVariable("Path", "$currentPath;$dotnetPath", "Machine")
+            $env:Path = "$env:Path;$dotnetPath"
+        }
+
+        # Verify installation
+        try {
+            $dotnetVersion = dotnet --version
+            Write-Host "Successfully installed .NET SDK version: $dotnetVersion"
+            return $true
+        }
+        catch {
+            Write-Host "Failed to verify .NET SDK installation"
+            return $false
+        }
+    }
+    catch {
+        Write-Host "Error installing .NET SDK: $_"
+        return $false
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempDir) {
+            Remove-Item -Path $tempDir -Recurse -Force
+        }
+    }
+}
+
 # Function to build WPF application
 function Build-WpfApplication {
     try {
@@ -37,12 +100,8 @@ function Build-WpfApplication {
         }
 
         # Check if .NET SDK is installed
-        try {
-            $dotnetVersion = dotnet --version
-            Write-Host "Found .NET SDK version: $dotnetVersion"
-        }
-        catch {
-            throw ".NET SDK is not installed. Please install .NET 6.0 SDK or later."
+        if (-not (Install-DotNetSdk)) {
+            throw ".NET SDK installation failed"
         }
 
         # Create Resources directory if it doesn't exist
@@ -322,17 +381,6 @@ if (-not (Test-Administrator)) {
 if ($args -contains "--uninstall") {
     Uninstall-Application
     exit 0
-}
-
-# Check if .NET SDK is installed
-try {
-    $dotnetVersion = dotnet --version
-    Write-Host "Found .NET SDK version: $dotnetVersion"
-}
-catch {
-    Write-Host ".NET SDK is not installed. Please install .NET 6.0 SDK or later."
-    Write-Host "Download from: https://dotnet.microsoft.com/download/dotnet/6.0"
-    exit 1
 }
 
 # Perform installation
