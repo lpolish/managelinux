@@ -23,6 +23,8 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - Service status monitoring
   - Hardware details
   - System logs viewer
+  - Migration report generation
+  - Live USB creation for Ubuntu 22.04
 
 - **Backup Management**
   - Create system backups
@@ -179,6 +181,21 @@ The `run.sh` script supports the following options:
    - Automatically installs required dependencies
    - Usage: `./iso_to_docker.sh <iso_file> [docker_tag]`
 
+9. **generate_migration_report.sh**
+   - Generates comprehensive system reports for migration preparation
+   - Collects detailed system information and configurations
+   - Creates timestamped reports in migration_reports directory
+   - Includes software versions, services, and security information
+   - Usage: `./generate_migration_report.sh`
+
+10. **create_live_usb.sh**
+    - Creates bootable Ubuntu 22.04 live USB
+    - Downloads Ubuntu 22.04 ISO if not present
+    - Lists available USB drives
+    - Handles drive formatting and ISO writing
+    - Includes safety checks and progress monitoring
+    - Usage: `sudo ./create_live_usb.sh`
+
 #### Project Structure
 
 ```
@@ -189,6 +206,8 @@ linux_quick_manage/
 ├── system_info.sh       # System information
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
+├── generate_migration_report.sh  # Migration report generator
+├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── README.md           # Documentation
@@ -271,6 +290,8 @@ linux_quick_manage/
 ├── system_info.sh       # System information
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
+├── generate_migration_report.sh  # Migration report generator
+├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
