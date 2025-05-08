@@ -222,12 +222,21 @@ function Install-Scripts {
         
         foreach ($script in $scripts) {
             $sourcePath = Join-Path $scriptPath $script
+            $destPath = Join-Path $installPath $script
             if (Test-Path $sourcePath) {
                 Write-Host "Copying $script to $installPath"
-                Copy-Item -Path $sourcePath -Destination $installPath -Force
-                if (-not (Test-Path (Join-Path $installPath $script))) {
+                # Ensure the script is copied with proper permissions
+                Copy-Item -Path $sourcePath -Destination $destPath -Force
+                # Set proper permissions
+                $acl = Get-Acl $destPath
+                $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "ReadAndExecute", "Allow")
+                $acl.SetAccessRule($rule)
+                Set-Acl $destPath $acl
+                
+                if (-not (Test-Path $destPath)) {
                     throw "Failed to copy $script"
                 }
+                Write-Host "✓ Copied and set permissions for $script"
             }
         }
         Write-Host "✓ Terminal scripts copied successfully"
@@ -244,12 +253,21 @@ function Install-Scripts {
             Write-Host "Creating global command at: $cmdPath"
             @"
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -Command "& 'C:\Program Files\ServerMigrationSuite\$($cmd.Value)' %*"
+cd /d "C:\Program Files\ServerMigrationSuite"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -Command "& { Set-Location 'C:\Program Files\ServerMigrationSuite'; & .\$($cmd.Value) %* }"
 pause
-"@ | Out-File -FilePath $cmdPath -Encoding ASCII
+"@ | Out-File -FilePath $cmdPath -Encoding ASCII -Force
+            
+            # Set proper permissions for the command file
+            $acl = Get-Acl $cmdPath
+            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone", "ReadAndExecute", "Allow")
+            $acl.SetAccessRule($rule)
+            Set-Acl $cmdPath $acl
+            
             if (-not (Test-Path $cmdPath)) {
                 throw "Failed to create command file $($cmd.Key)"
             }
+            Write-Host "✓ Created and set permissions for $($cmd.Key)"
         }
         Write-Host "✓ Global commands created"
         
@@ -289,7 +307,7 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             New-Shortcut -TargetPath "powershell.exe" `
                 -ShortcutPath "$startMenuPath\$($shortcut.Key).lnk" `
                 -Description $shortcut.Key `
-                -Arguments "-NoProfile -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -Command `"& 'C:\Program Files\ServerMigrationSuite\$($shortcut.Value)'`"" `
+                -Arguments "-NoProfile -ExecutionPolicy Bypass -NoExit -WindowStyle Normal -Command `"& { Set-Location 'C:\Program Files\ServerMigrationSuite'; & .\$($shortcut.Value) }`"" `
                 -IconPath "shell32.dll,7" `
                 -WindowStyle 1
         }
