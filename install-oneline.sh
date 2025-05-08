@@ -37,23 +37,47 @@ check_root() {
 check_requirements() {
     echo -e "${BLUE}Checking system requirements...${NC}"
     
-    # Check if git is installed
-    if ! command -v git &> /dev/null; then
-        echo -e "${YELLOW}Git is not installed. Installing git...${NC}"
-        apt-get update && apt-get install -y git || {
-            echo -e "${RED}Failed to install git${NC}"
-            return 1
-        }
+    # Ensure apt-get is available first
+    if ! command -v apt-get &> /dev/null; then
+        echo -e "${RED}This script requires apt-get package manager${NC}"
+        return 1
     fi
     
-    # Check other required commands
-    local required_commands=("fdisk" "parted" "tar" "dpkg" "apt-get" "curl")
-    for cmd in "${required_commands[@]}"; do
+    # Update package list
+    echo -e "${BLUE}Updating package list...${NC}"
+    apt-get update || {
+        echo -e "${RED}Failed to update package list${NC}"
+        return 1
+    }
+    
+    # Map commands to their package names
+    declare -A cmd_packages=(
+        ["git"]="git"
+        ["fdisk"]="fdisk"
+        ["parted"]="parted"
+        ["tar"]="tar"
+        ["dpkg"]="dpkg"
+        ["curl"]="curl"
+    )
+    
+    # Check and install required packages
+    local missing_packages=()
+    
+    for cmd in "${!cmd_packages[@]}"; do
         if ! command -v "$cmd" &> /dev/null; then
-            echo -e "${RED}Required command not found: $cmd${NC}"
-            return 1
+            echo -e "${YELLOW}Required command not found: $cmd${NC}"
+            missing_packages+=("${cmd_packages[$cmd]}")
         fi
     done
+    
+    # Install missing packages if any
+    if [ ${#missing_packages[@]} -gt 0 ]; then
+        echo -e "${BLUE}Installing missing packages: ${missing_packages[*]}${NC}"
+        if ! apt-get install -y "${missing_packages[@]}"; then
+            echo -e "${RED}Failed to install required packages${NC}"
+            return 1
+        fi
+    fi
     
     echo -e "${GREEN}System requirements met${NC}"
     return 0
