@@ -87,6 +87,7 @@ The suite can be used in two ways:
    ```bash
    sudo ./run.sh --install    # Install the suite system-wide
    managelinux            # Run the installed suite
+   managelinux --update   # Update to the latest version
    sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # Uninstall
    ```
 
@@ -98,6 +99,7 @@ The `run.sh` script supports the following options:
 - `-s, --status`: Show installation status
 - `-i, --install`: Install the suite system-wide
 - `-u, --uninstall`: Uninstall the suite
+- `-U, --update`: Update the suite to the latest version
 - `-r, --run`: Run the suite (default if no option provided)
 
 #### Script Documentation
@@ -109,6 +111,7 @@ The `run.sh` script supports the following options:
    - Handles installation, uninstallation, and execution
    - Provides command-line interface for all operations
    - Manages both installed and non-installed usage
+   - Supports automatic updates via git
 
 2. **install.sh**
    - Handles system-wide installation
