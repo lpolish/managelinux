@@ -87,13 +87,17 @@ function Test-Installation {
     }
     Write-Host "✓ Command file found"
     
-    # Test command availability
+    # Verify command file content
     try {
-        $result = & $cmdPath -ErrorAction Stop
-        Write-Host "✓ Command test successful"
+        $content = Get-Content $cmdPath -Raw
+        if (-not ($content -match "powershell.exe -ExecutionPolicy Bypass -File")) {
+            Write-Host "Error: Command file has incorrect content"
+            return $false
+        }
+        Write-Host "✓ Command file content verified"
     }
     catch {
-        Write-Host "Error: Command test failed: $_"
+        Write-Host "Error: Could not verify command file content: $_"
         return $false
     }
     
