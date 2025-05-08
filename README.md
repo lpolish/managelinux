@@ -267,27 +267,33 @@ This tool performs system-level operations that can potentially damage your syst
 
 3. **Using the ISO to Docker Converter**:
    ```powershell
-   # Using the installed version
-   Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -ArgumentList "path\to\your.iso" "custom-tag"
+   # Using the installed version (GUI)
+   Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -Verb RunAs
 
-   # Or run directly from the repository
+   # Or run directly from the repository (GUI)
+   .\iso_to_docker.ps1
+
+   # Command-line version (alternative)
    .\iso_to_docker.ps1 -IsoPath "path\to\your.iso" -DockerTag "custom-tag"
    ```
 
 4. **Creating Live USB**:
    ```powershell
-   # Using the installed version
-   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb.ps1" -Verb RunAs
+   # Using the installed version (GUI)
+   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb_gui.ps1" -Verb RunAs
 
-   # Or run directly from the repository
+   # Or run directly from the repository (GUI)
+   .\create_live_usb_gui.ps1
+
+   # Command-line version (alternative)
    .\create_live_usb.ps1
    ```
-   The script will:
-   - List available USB drives
-   - Download Ubuntu 22.04 ISO if not present
-   - Install Rufus if not already installed
-   - Create a bootable USB drive
-   - Show progress and completion status
+   The GUI application provides:
+   - User-friendly interface for USB drive selection
+   - Progress indicators for downloads and operations
+   - Automatic Rufus installation if needed
+   - Status updates during the process
+   - Start Menu and Desktop shortcuts for easy access
 
 5. **Uninstallation**:
    ```powershell
@@ -310,9 +316,10 @@ linux_quick_manage/
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
-│   ├── iso_to_docker.ps1  # Windows ISO to Docker converter
-│   ├── create_live_usb.ps1 # Windows Live USB creator
-│   └── install.ps1        # Windows installation script
+│   ├── iso_to_docker.ps1      # Windows ISO to Docker converter
+│   ├── create_live_usb.ps1    # Windows Live USB creator (CLI)
+│   ├── create_live_usb_gui.ps1 # Windows Live USB creator (GUI)
+│   └── install.ps1            # Windows installation script
 ├── README.md           # Documentation
 └── LICENSE             # License file
 ``` 
