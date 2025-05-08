@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Installation paths
-INSTALL_DIR="/usr/local/bin/linux_quick_manage"
+INSTALL_DIR="/usr/local/lib/managelinux"
 SYMLINK_DIR="/usr/local/bin"
 BIN_NAME="managelinux"
 
@@ -27,6 +27,7 @@ show_status() {
         echo -e "${GREEN}Server Migration and Management Suite is installed${NC}"
         echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
         echo -e "Command: ${YELLOW}$BIN_NAME${NC}"
+        echo -e "To update, run: ${YELLOW}$BIN_NAME --update${NC}"
         echo -e "To uninstall, run: ${YELLOW}$INSTALL_DIR/uninstall.sh${NC}"
     else
         echo -e "${YELLOW}Server Migration and Management Suite is not installed${NC}"
@@ -45,12 +46,14 @@ show_help() {
     echo "  -s, --status   Show installation status"
     echo "  -i, --install  Install the suite"
     echo "  -u, --uninstall Uninstall the suite"
+    echo "  -U, --update   Update the suite to the latest version"
     echo "  -r, --run      Run the suite (default if no option provided)"
     echo
     echo "Examples:"
     echo "  $0              # Run the suite"
     echo "  $0 --status     # Show installation status"
     echo "  $0 --install    # Install the suite"
+    echo "  $0 --update     # Update the suite"
     echo "  $0 --uninstall  # Uninstall the suite"
 }
 
@@ -85,6 +88,31 @@ handle_uninstall() {
     "$INSTALL_DIR/uninstall.sh"
 }
 
+# Function to handle updates
+handle_update() {
+    if ! is_installed; then
+        echo -e "${YELLOW}Suite is not installed${NC}"
+        return 1
+    fi
+    
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "${RED}Please run as root or with sudo privileges${NC}"
+        return 1
+    fi
+    
+    echo -e "${BLUE}Updating Server Migration and Management Suite...${NC}"
+    cd "$INSTALL_DIR" || return 1
+    
+    if git pull; then
+        chmod +x *.sh
+        echo -e "${GREEN}Update completed successfully${NC}"
+        return 0
+    else
+        echo -e "${RED}Update failed${NC}"
+        return 1
+    fi
+}
+
 # Function to run the suite
 run_suite() {
     if is_installed; then
@@ -115,6 +143,9 @@ case "$1" in
         ;;
     -u|--uninstall)
         handle_uninstall
+        ;;
+    -U|--update)
+        handle_update
         ;;
     -r|--run|"")
         run_suite
