@@ -62,7 +62,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 
 1. One-line installation:
    ```bash
-   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install-oneline.sh | bash
+   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install-oneline.sh | sudo bash
    ```
 
 2. Or clone and install manually:
@@ -88,8 +88,29 @@ The suite can be used in two ways:
    sudo ./run.sh --install    # Install the suite system-wide
    managelinux            # Run the installed suite
    managelinux --update   # Update to the latest version
-   sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # Uninstall
    ```
+
+#### Uninstallation
+
+The suite can be uninstalled in two ways:
+
+1. **One-line Uninstaller** (recommended):
+   ```bash
+   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/uninstall-oneline.sh | sudo bash
+   ```
+
+2. **Manual Uninstallation**:
+   ```bash
+   sudo ./uninstall.sh   # If you have a local copy
+   # OR
+   sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # If installed system-wide
+   ```
+
+The uninstaller will:
+- Remove all installation directories (both old and new paths)
+- Remove the system-wide symlink
+- Provide detailed feedback about the uninstallation process
+- Handle any existing installations from previous versions
 
 #### Command-line Options
 
