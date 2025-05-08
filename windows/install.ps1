@@ -169,13 +169,15 @@ function New-Shortcut {
         [string]$ShortcutPath,
         [string]$Description,
         [string]$Arguments,
-        [string]$IconPath
+        [string]$IconPath,
+        [int]$WindowStyle = 1  # 1 = Normal, 3 = Maximized, 7 = Minimized
     )
     $WshShell = New-Object -ComObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
     $Shortcut.TargetPath = $TargetPath
     $Shortcut.Arguments = $Arguments
     $Shortcut.Description = $Description
+    $Shortcut.WindowStyle = $WindowStyle
     if ($IconPath) {
         $Shortcut.IconLocation = $IconPath
     }
@@ -242,7 +244,7 @@ function Install-Scripts {
             Write-Host "Creating global command at: $cmdPath"
             @"
 @echo off
-powershell.exe -ExecutionPolicy Bypass -File "C:\Program Files\ServerMigrationSuite\$($cmd.Value)" %*
+powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Normal -File "C:\Program Files\ServerMigrationSuite\$($cmd.Value)" %*
 "@ | Out-File -FilePath $cmdPath -Encoding ASCII
             if (-not (Test-Path $cmdPath)) {
                 throw "Failed to create command file $($cmd.Key)"
@@ -286,8 +288,9 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             New-Shortcut -TargetPath "powershell.exe" `
                 -ShortcutPath "$startMenuPath\$($shortcut.Key).lnk" `
                 -Description $shortcut.Key `
-                -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\$($shortcut.Value)`"" `
-                -IconPath "shell32.dll,7"
+                -Arguments "-NoProfile -ExecutionPolicy Bypass -WindowStyle Normal -File `"$installPath\$($shortcut.Value)`"" `
+                -IconPath "shell32.dll,7" `
+                -WindowStyle 1
         }
         
         # Create shortcut for WPF Live USB Creator
@@ -297,7 +300,8 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             New-Shortcut -TargetPath $wpfAppPath `
                 -ShortcutPath "$startMenuPath\Create Live USB.lnk" `
                 -Description "Create Live USB (Modern GUI)" `
-                -IconPath "$wpfAppPath,0"
+                -IconPath "$wpfAppPath,0" `
+                -WindowStyle 1
         }
         
         Write-Host "✓ Start Menu shortcuts created"
