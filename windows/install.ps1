@@ -1,4 +1,4 @@
-﻿# Windows Installation Script for ISOToDocker
+﻿# Windows Installation Script for Server Migration Suite
 
 # Function to check if running as administrator
 function Test-Administrator {
@@ -98,6 +98,25 @@ function Test-Installation {
     return $true
 }
 
+# Function to create shortcut
+function New-Shortcut {
+    param (
+        [string]$TargetPath,
+        [string]$ShortcutPath,
+        [string]$Description,
+        [string]$IconPath
+    )
+    
+    $WshShell = New-Object -ComObject WScript.Shell
+    $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+    $Shortcut.TargetPath = $TargetPath
+    $Shortcut.Description = $Description
+    if ($IconPath) {
+        $Shortcut.IconLocation = $IconPath
+    }
+    $Shortcut.Save()
+}
+
 # Function to create installation directory
 function Install-Scripts {
     try {
@@ -158,39 +177,34 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
         }
         Write-Host "✓ Uninstaller created"
         
-        # Create shortcuts
-        $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker"
-        if (-not (Test-Path $shortcutPath)) {
+        # Create Start Menu shortcuts
+        $startMenuPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Server Migration Suite"
+        if (-not (Test-Path $startMenuPath)) {
             Write-Host "Creating Start Menu shortcut directory"
-            New-Item -ItemType Directory -Path $shortcutPath | Out-Null
-            if (-not (Test-Path $shortcutPath)) {
+            New-Item -ItemType Directory -Path $startMenuPath | Out-Null
+            if (-not (Test-Path $startMenuPath)) {
                 throw "Failed to create shortcut directory"
             }
         }
         
         # Create GUI shortcut (Start Menu)
         Write-Host "Creating Start Menu shortcut (GUI mode)"
-        $WshShell = New-Object -ComObject WScript.Shell
-        $Shortcut = $WshShell.CreateShortcut("$shortcutPath\ISO to Docker Converter.lnk")
-        $Shortcut.TargetPath = "powershell.exe"
-        $Shortcut.Arguments = "-ExecutionPolicy Bypass -WindowStyle Normal -File `"$installPath\iso_to_docker.ps1`""
-        $Shortcut.WorkingDirectory = $installPath
-        $Shortcut.Description = "ISO to Docker Converter (GUI Mode)"
-        $Shortcut.Save()
-        if (-not (Test-Path "$shortcutPath\ISO to Docker Converter.lnk")) {
+        New-Shortcut -TargetPath "powershell.exe" -ShortcutPath "$startMenuPath\ISO to Docker Converter.lnk" `
+            -Description "Convert ISO to Docker Image" `
+            -IconPath "shell32.dll,7" `
+            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`""
+        if (-not (Test-Path "$startMenuPath\ISO to Docker Converter.lnk")) {
             throw "Failed to create Start Menu shortcut"
         }
         Write-Host "✓ Start Menu shortcut created"
 
         # Create command-line shortcut (Start Menu)
         Write-Host "Creating command-line shortcut in Start Menu"
-        $Shortcut = $WshShell.CreateShortcut("$shortcutPath\ISO to Docker Converter (Command Line).lnk")
-        $Shortcut.TargetPath = "powershell.exe"
-        $Shortcut.Arguments = "-ExecutionPolicy Bypass -NoExit -File `"$installPath\iso_to_docker.ps1`""
-        $Shortcut.WorkingDirectory = $installPath
-        $Shortcut.Description = "ISO to Docker Converter (Command Line Mode)"
-        $Shortcut.Save()
-        if (-not (Test-Path "$shortcutPath\ISO to Docker Converter (Command Line).lnk")) {
+        New-Shortcut -TargetPath "powershell.exe" -ShortcutPath "$startMenuPath\ISO to Docker Converter (Command Line).lnk" `
+            -Description "ISO to Docker Converter (Command Line Mode)" `
+            -IconPath "shell32.dll,7" `
+            -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$installPath\iso_to_docker.ps1`""
+        if (-not (Test-Path "$startMenuPath\ISO to Docker Converter (Command Line).lnk")) {
             throw "Failed to create command-line shortcut"
         }
         Write-Host "✓ Command-line shortcut created"
