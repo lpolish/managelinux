@@ -56,16 +56,65 @@ function Get-RequiredFiles {
     }
 }
 
+# Function to verify installation
+function Test-Installation {
+    param (
+        [string]$installPath,
+        [string]$cmdPath
+    )
+    
+    Write-Host "`nVerifying installation..."
+    
+    # Check installation directory
+    if (-not (Test-Path $installPath)) {
+        Write-Host "Error: Installation directory not found at $installPath"
+        return $false
+    }
+    Write-Host "✓ Installation directory exists"
+    
+    # Check iso_to_docker.ps1
+    $scriptPath = Join-Path $installPath "iso_to_docker.ps1"
+    if (-not (Test-Path $scriptPath)) {
+        Write-Host "Error: iso_to_docker.ps1 not found at $scriptPath"
+        return $false
+    }
+    Write-Host "✓ iso_to_docker.ps1 found"
+    
+    # Check command file
+    if (-not (Test-Path $cmdPath)) {
+        Write-Host "Error: Command file not found at $cmdPath"
+        return $false
+    }
+    Write-Host "✓ Command file found"
+    
+    # Test command availability
+    try {
+        $result = & $cmdPath -ErrorAction Stop
+        Write-Host "✓ Command test successful"
+    }
+    catch {
+        Write-Host "Error: Command test failed: $_"
+        return $false
+    }
+    
+    return $true
+}
+
 # Function to create installation directory
 function Install-Scripts {
     try {
+        Write-Host "`nStarting installation process..."
         $installPath = "C:\Program Files\ServerMigrationSuite"
         
         # Create installation directory
         if (-not (Test-Path $installPath)) {
             Write-Host "Creating installation directory: $installPath"
             New-Item -ItemType Directory -Path $installPath | Out-Null
+            if (-not (Test-Path $installPath)) {
+                throw "Failed to create installation directory"
+            }
         }
+        Write-Host "✓ Installation directory ready"
         
         # Get the script directory
         $scriptPath = Get-ScriptDirectory
@@ -75,20 +124,27 @@ function Install-Scripts {
         if (Test-Path $isoToDockerPath) {
             Write-Host "Copying iso_to_docker.ps1 to $installPath"
             Copy-Item -Path $isoToDockerPath -Destination $installPath -Force
+            if (-not (Test-Path (Join-Path $installPath "iso_to_docker.ps1"))) {
+                throw "Failed to copy iso_to_docker.ps1"
+            }
         }
         else {
-            Write-Host "Error: iso_to_docker.ps1 not found at $isoToDockerPath"
-            exit 1
+            throw "Error: iso_to_docker.ps1 not found at $isoToDockerPath"
         }
+        Write-Host "✓ Scripts copied successfully"
 
         # Create global command
         $system32Path = [Environment]::GetFolderPath("System")
         $cmdPath = Join-Path $system32Path "isotodocker.cmd"
+        Write-Host "Creating global command at: $cmdPath"
         @"
 @echo off
 powershell.exe -ExecutionPolicy Bypass -File "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" %*
 "@ | Out-File -FilePath $cmdPath -Encoding ASCII
-        Write-Host "Created global command at: $cmdPath"
+        if (-not (Test-Path $cmdPath)) {
+            throw "Failed to create command file"
+        }
+        Write-Host "✓ Global command created"
         
         # Create uninstaller
         $uninstallerPath = Join-Path $installPath "uninstall.ps1"
@@ -99,12 +155,19 @@ Remove-Item -Path "C:\Program Files\ServerMigrationSuite" -Recurse -Force
 Remove-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker" -Recurse -Force
 Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -Force
 "@ | Out-File -FilePath $uninstallerPath -Encoding ASCII
+        if (-not (Test-Path $uninstallerPath)) {
+            throw "Failed to create uninstaller"
+        }
+        Write-Host "✓ Uninstaller created"
         
         # Create shortcuts
         $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker"
         if (-not (Test-Path $shortcutPath)) {
             Write-Host "Creating Start Menu shortcut directory"
             New-Item -ItemType Directory -Path $shortcutPath | Out-Null
+            if (-not (Test-Path $shortcutPath)) {
+                throw "Failed to create shortcut directory"
+            }
         }
         
         Write-Host "Creating Start Menu shortcut"
@@ -113,10 +176,20 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
         $Shortcut.TargetPath = "powershell.exe"
         $Shortcut.Arguments = "-ExecutionPolicy Bypass -File `"$installPath\iso_to_docker.ps1`""
         $Shortcut.Save()
+        if (-not (Test-Path "$shortcutPath\ISO to Docker Converter.lnk")) {
+            throw "Failed to create Start Menu shortcut"
+        }
+        Write-Host "✓ Start Menu shortcut created"
         
-        Write-Host "Installation completed successfully!"
+        # Verify installation
+        if (-not (Test-Installation -installPath $installPath -cmdPath $cmdPath)) {
+            throw "Installation verification failed"
+        }
+        
+        Write-Host "`nInstallation completed successfully!"
         Write-Host "The ISO to Docker Converter is now available as 'isotodocker' command"
         Write-Host "You can also find it in the Start Menu under 'ISOToDocker'"
+        Write-Host "`nTo test the installation, try running: isotodocker --help"
     }
     catch {
         Write-Host "Error in Install-Scripts: $_"
