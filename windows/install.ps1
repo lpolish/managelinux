@@ -104,12 +104,13 @@ function New-Shortcut {
         [string]$TargetPath,
         [string]$ShortcutPath,
         [string]$Description,
+        [string]$Arguments,
         [string]$IconPath
     )
-    
     $WshShell = New-Object -ComObject WScript.Shell
     $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
     $Shortcut.TargetPath = $TargetPath
+    $Shortcut.Arguments = $Arguments
     $Shortcut.Description = $Description
     if ($IconPath) {
         $Shortcut.IconLocation = $IconPath
@@ -189,10 +190,11 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
         
         # Create GUI shortcut (Start Menu)
         Write-Host "Creating Start Menu shortcut (GUI mode)"
-        New-Shortcut -TargetPath "powershell.exe" -ShortcutPath "$startMenuPath\ISO to Docker Converter.lnk" `
-            -Description "Convert ISO to Docker Image" `
-            -IconPath "shell32.dll,7" `
-            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`""
+        New-Shortcut -TargetPath "powershell.exe" `
+            -ShortcutPath "$startMenuPath\ISO to Docker Converter.lnk" `
+            -Description "Convert ISO to Docker Image (GUI)" `
+            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`"" `
+            -IconPath "shell32.dll,7"
         if (-not (Test-Path "$startMenuPath\ISO to Docker Converter.lnk")) {
             throw "Failed to create Start Menu shortcut"
         }
@@ -200,7 +202,8 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
 
         # Create command-line shortcut (Start Menu)
         Write-Host "Creating command-line shortcut in Start Menu"
-        New-Shortcut -TargetPath "powershell.exe" -ShortcutPath "$startMenuPath\ISO to Docker Converter (Command Line).lnk" `
+        New-Shortcut -TargetPath "powershell.exe" `
+            -ShortcutPath "$startMenuPath\ISO to Docker Converter (Command Line).lnk" `
             -Description "ISO to Docker Converter (Command Line Mode)" `
             -IconPath "shell32.dll,7" `
             -Arguments "-ExecutionPolicy Bypass -NoExit -File `"$installPath\iso_to_docker.ps1`""
@@ -208,6 +211,19 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
             throw "Failed to create command-line shortcut"
         }
         Write-Host "✓ Command-line shortcut created"
+        
+        # Create Desktop shortcuts (optional)
+        $desktopPath = [Environment]::GetFolderPath("Desktop")
+        New-Shortcut -TargetPath "powershell.exe" `
+            -ShortcutPath "$desktopPath\ISO to Docker Converter.lnk" `
+            -Description "Convert ISO to Docker Image (GUI)" `
+            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\iso_to_docker_gui.ps1`"" `
+            -IconPath "shell32.dll,7"
+        New-Shortcut -TargetPath "powershell.exe" `
+            -ShortcutPath "$desktopPath\Create Live USB.lnk" `
+            -Description "Create Ubuntu 22.04 Live USB (GUI)" `
+            -Arguments "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$installPath\create_live_usb_gui.ps1`"" `
+            -IconPath "shell32.dll,7"
         
         # Verify installation
         if (-not (Test-Installation -installPath $installPath -cmdPath $cmdPath)) {
@@ -219,6 +235,8 @@ Remove-Item -Path "$([Environment]::GetFolderPath('System'))\isotodocker.cmd" -F
         Write-Host "1. GUI Mode: Use the Start Menu shortcut 'ISO to Docker Converter'"
         Write-Host "2. Command Line Mode: Use 'isotodocker' command in PowerShell or Command Prompt"
         Write-Host "`nTo test the command-line mode, try running: isotodocker --help"
+        Write-Host "Applications are available in the Start Menu under 'Server Migration Suite'"
+        Write-Host "Desktop shortcuts have also been created for easy access."
     }
     catch {
         Write-Host "Error in Install-Scripts: $_"
@@ -233,32 +251,53 @@ function Uninstall-Application {
         
         # Define paths
         $installPath = "C:\Program Files\ServerMigrationSuite"
-        $shortcutPath = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\ISOToDocker"
-        $cmdPath = Join-Path ([Environment]::GetFolderPath("System")) "isotodocker.cmd"
-        
+        $startMenuPath = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\Server Migration Suite"
+        $desktopPath = [Environment]::GetFolderPath("Desktop")
+        $cmdPath = Join-Path ([Environment]::GetFolderPath('System')) "isotodocker.cmd"
+        $uninstallerPath = Join-Path $installPath "uninstall.ps1"
+
         # Remove command file
         if (Test-Path $cmdPath) {
             Write-Host "Removing command file: $cmdPath"
             Remove-Item -Path $cmdPath -Force
             Write-Host "✓ Command file removed"
         }
-        
+
         # Remove Start Menu shortcuts
-        if (Test-Path $shortcutPath) {
-            Write-Host "Removing Start Menu shortcuts: $shortcutPath"
-            Remove-Item -Path $shortcutPath -Recurse -Force
+        if (Test-Path $startMenuPath) {
+            Write-Host "Removing Start Menu shortcuts: $startMenuPath"
+            Remove-Item -Path $startMenuPath -Recurse -Force
             Write-Host "✓ Start Menu shortcuts removed"
         }
-        
+
+        # Remove Desktop shortcuts
+        $desktopShortcuts = @(
+            "$desktopPath\ISO to Docker Converter.lnk",
+            "$desktopPath\Create Live USB.lnk"
+        )
+        foreach ($shortcut in $desktopShortcuts) {
+            if (Test-Path $shortcut) {
+                Write-Host "Removing Desktop shortcut: $shortcut"
+                Remove-Item -Path $shortcut -Force
+            }
+        }
+        Write-Host "✓ Desktop shortcuts removed"
+
         # Remove installation directory
         if (Test-Path $installPath) {
             Write-Host "Removing installation directory: $installPath"
             Remove-Item -Path $installPath -Recurse -Force
             Write-Host "✓ Installation directory removed"
         }
-        
+
+        # Remove the uninstaller itself if present
+        if (Test-Path $uninstallerPath) {
+            Write-Host "Removing uninstaller script: $uninstallerPath"
+            Remove-Item -Path $uninstallerPath -Force
+        }
+
         Write-Host "`nUninstallation completed successfully!"
-        Write-Host "All ISO to Docker Converter components have been removed from your system."
+        Write-Host "All Server Migration Suite components have been removed from your system."
     }
     catch {
         Write-Host "Error during uninstallation: $_"
