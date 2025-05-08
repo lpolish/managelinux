@@ -16,6 +16,9 @@ INSTALL_DIR="/usr/local/bin/linux_quick_manage"
 SYMLINK_DIR="/usr/local/bin"
 BIN_NAME="managelinux"
 
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}Please run as root or with sudo privileges${NC}"
@@ -28,7 +31,7 @@ mkdir -p "$INSTALL_DIR"
 
 # Copy all script files
 echo -e "${BLUE}Copying script files...${NC}"
-cp -f *.sh "$INSTALL_DIR/"
+cp -f "$SCRIPT_DIR"/*.sh "$INSTALL_DIR/"
 
 # Make all scripts executable
 echo -e "${BLUE}Setting executable permissions...${NC}"
