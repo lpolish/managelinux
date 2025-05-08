@@ -146,4 +146,9 @@ catch {
 finally {
     Write-Host "`nPress any key to exit..."
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    
+    # Only exit if we're not running in a persistent window
+    if (-not $Host.Name.Contains("ISE") -and -not $PSCommandPath.Contains("ServerMigrationSuite")) {
+        exit
+    }
 } 
