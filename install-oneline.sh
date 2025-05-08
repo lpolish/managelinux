@@ -53,7 +53,7 @@ check_requirements() {
     # Map commands to their package names
     declare -A cmd_packages=(
         ["git"]="git"
-        ["fdisk"]="fdisk"
+        ["fdisk"]="util-linux"
         ["parted"]="parted"
         ["tar"]="tar"
         ["dpkg"]="dpkg"
@@ -62,10 +62,12 @@ check_requirements() {
     
     # Check and install required packages
     local missing_packages=()
+    local missing_commands=()
     
     for cmd in "${!cmd_packages[@]}"; do
         if ! command -v "$cmd" &> /dev/null; then
             echo -e "${YELLOW}Required command not found: $cmd${NC}"
+            missing_commands+=("$cmd")
             missing_packages+=("${cmd_packages[$cmd]}")
         fi
     done
@@ -77,6 +79,14 @@ check_requirements() {
             echo -e "${RED}Failed to install required packages${NC}"
             return 1
         fi
+        
+        # Verify commands are now available
+        for cmd in "${missing_commands[@]}"; do
+            if ! command -v "$cmd" &> /dev/null; then
+                echo -e "${RED}Command '$cmd' is still not available after package installation${NC}"
+                return 1
+            fi
+        done
     fi
     
     echo -e "${GREEN}System requirements met${NC}"
