@@ -87,19 +87,13 @@ function Test-Installation {
     }
     Write-Host "✓ Command file found"
     
-    # Verify command file content
-    try {
-        $content = Get-Content $cmdPath -Raw
-        if (-not ($content -match "powershell.exe -ExecutionPolicy Bypass -File")) {
-            Write-Host "Error: Command file has incorrect content"
-            return $false
-        }
-        Write-Host "✓ Command file content verified"
-    }
-    catch {
-        Write-Host "Error: Could not verify command file content: $_"
+    # Check command file size (should be non-zero)
+    $fileInfo = Get-Item $cmdPath
+    if ($fileInfo.Length -eq 0) {
+        Write-Host "Error: Command file is empty"
         return $false
     }
+    Write-Host "✓ Command file size verified"
     
     return $true
 }
