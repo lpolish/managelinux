@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # One-line installer for Server Migration and Management Suite
-# Usage: curl -sSL https://raw.githubusercontent.com/lpolish/managelinux/main/install-oneline.sh | sudo bash
+# Repo: https://github.com/lpolish/managelinuxr
+# Version: 1.0.0
 
 # Color definitions
 RED='\033[0;31m'
@@ -11,141 +12,67 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Installation paths
-INSTALL_DIR="/usr/local/lib/managelinux"
-BIN_DIR="/usr/local/bin"
+INSTALL_DIR="/usr/local/bin/linux_quick_manage"
 REPO_URL="https://github.com/lpolish/managelinux.git"
 
-# Function to cleanup on exit
-cleanup() {
-    if [ -d "$TEMP_DIR" ]; then
-        rm -rf "$TEMP_DIR"
-    fi
-}
+echo "Starting Server Migration and Management Suite installation..."
 
-# Set up cleanup on script exit
-trap cleanup EXIT
-
-# Function to check if running as root
-check_root() {
-    if [ "$EUID" -ne 0 ]; then
-        echo -e "${RED}Please run as root or with sudo privileges${NC}"
-        exit 1
-    fi
-}
-
-# Function to check system requirements
-check_requirements() {
-    echo -e "${BLUE}Checking system requirements...${NC}"
-    
-    # Ensure apt-get is available first
-    if ! command -v apt-get &> /dev/null; then
-        echo -e "${RED}This script requires apt-get package manager${NC}"
-        return 1
-    fi
-    
-    # Update package list
-    echo -e "${BLUE}Updating package list...${NC}"
-    apt-get update || {
-        echo -e "${RED}Failed to update package list${NC}"
-        return 1
-    }
-    
-    # Map commands to their package names
-    declare -A cmd_packages=(
-        ["git"]="git"
-        ["fdisk"]="fdisk"
-        ["parted"]="parted"
-        ["tar"]="tar"
-        ["dpkg"]="dpkg"
-        ["curl"]="curl"
-    )
-    
-    # Check and install required packages
-    local missing_packages=()
-    
-    for cmd in "${!cmd_packages[@]}"; do
-        if ! command -v "$cmd" &> /dev/null; then
-            echo -e "${YELLOW}Required command not found: $cmd${NC}"
-            missing_packages+=("${cmd_packages[$cmd]}")
-        fi
-    done
-    
-    # Install missing packages if any
-    if [ ${#missing_packages[@]} -gt 0 ]; then
-        echo -e "${BLUE}Installing missing packages: ${missing_packages[*]}${NC}"
-        if ! apt-get install -y "${missing_packages[@]}"; then
-            echo -e "${RED}Failed to install required packages${NC}"
-            return 1
-        fi
-    fi
-    
-    echo -e "${GREEN}System requirements met${NC}"
-    return 0
-}
-
-# Function to install the suite
-install_suite() {
-    echo -e "${BLUE}Installing Server Migration and Management Suite...${NC}"
-    
-    # Create installation directory if it doesn't exist
-    mkdir -p "$INSTALL_DIR"
-    
-    # Clone the repository
-    echo -e "${BLUE}Cloning repository...${NC}"
-    if ! git clone "$REPO_URL" "$INSTALL_DIR"; then
-        echo -e "${RED}Failed to clone repository${NC}"
-        return 1
-    fi
-    
-    # Make scripts executable
-    chmod +x "$INSTALL_DIR"/*.sh
-    
-    # Create symlink for the main script
-    ln -sf "$INSTALL_DIR/run.sh" "$BIN_DIR/managelinux"
-    
-    # Create update script
-    cat > "$INSTALL_DIR/update.sh" << 'EOF'
-#!/bin/bash
-cd "$(dirname "$0")"
-git pull
-chmod +x *.sh
-echo "Update completed successfully"
-EOF
-    
-    chmod +x "$INSTALL_DIR/update.sh"
-    
-    # Create uninstall script
-    cat > "$INSTALL_DIR/uninstall.sh" << EOF
-#!/bin/bash
-rm -f "$BIN_DIR/managelinux"
-rm -rf "$INSTALL_DIR"
-echo "Uninstallation completed successfully"
-EOF
-    
-    chmod +x "$INSTALL_DIR/uninstall.sh"
-    
-    echo -e "${GREEN}Installation completed successfully${NC}"
-    return 0
-}
-
-# Main installation process
-echo -e "${BLUE}Starting Server Migration and Management Suite installation...${NC}"
-
-# Check root privileges
-check_root
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}Please run as root or with sudo privileges${NC}"
+    exit 1
+fi
 
 # Check system requirements
-if ! check_requirements; then
-    exit 1
-fi
+echo "Checking system requirements..."
+
+# Update package list
+echo "Updating package list..."
+apt-get update
+
+# Check for required commands
+required_commands=("git" "fdisk" "parted" "tar" "dpkg" "apt-get")
+for cmd in "${required_commands[@]}"; do
+    if ! command -v "$cmd" &> /dev/null; then
+        echo -e "${RED}Required command not found: $cmd${NC}"
+        echo "Installing required packages..."
+        apt-get install -y "$cmd"
+    fi
+done
+
+echo "System requirements met"
 
 # Install the suite
-if ! install_suite; then
-    echo -e "${RED}Installation failed${NC}"
+echo "Installing Server Migration and Management Suite..."
+
+# Remove existing installation if it exists
+if [ -d "$INSTALL_DIR" ]; then
+    echo "Removing existing installation..."
+    rm -rf "$INSTALL_DIR"
+fi
+
+# Clone repository
+echo "Cloning repository..."
+if ! git clone "$REPO_URL" "$INSTALL_DIR"; then
+    echo -e "${RED}Failed to clone repository${NC}"
+    echo "Installation failed"
     exit 1
 fi
 
-echo -e "${GREEN}Installation completed successfully${NC}"
-echo -e "You can now run the suite using: ${YELLOW}managelinux${NC}"
-echo -e "To update, run: ${YELLOW}managelinux update${NC}"
-echo -e "To uninstall, run: ${YELLOW}/usr/local/lib/managelinux/uninstall.sh${NC}" 
+# Make scripts executable
+echo "Setting up scripts..."
+chmod +x "$INSTALL_DIR"/*.sh
+
+# Create symlink
+echo "Creating symlink..."
+ln -sf "$INSTALL_DIR/server_migrator.sh" "/usr/local/bin/managelinux"
+
+# Verify installation
+if [ -L "/usr/local/bin/managelinux" ] && [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
+    echo -e "${GREEN}Installation completed successfully!${NC}"
+    echo -e "You can now run the suite using: ${YELLOW}managelinux${NC}"
+    echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
+else
+    echo -e "${RED}Installation failed${NC}"
+    exit 1
+fi 
