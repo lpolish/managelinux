@@ -151,13 +151,13 @@ install_kubernetes_components() {
     echo -e "${BLUE}Installing Kubernetes components...${NC}"
     
     # Add Kubernetes GPG key
-    if ! curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg; then
+    if ! curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /usr/share/keyrings/kubernetes-apt-keyring.gpg; then
         echo -e "${RED}Failed to add Kubernetes GPG key${NC}"
         return 1
     fi
     
     # Add Kubernetes repository
-    if ! echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null; then
+    if ! echo "deb [signed-by=/usr/share/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null; then
         echo -e "${RED}Failed to add Kubernetes repository${NC}"
         return 1
     fi
