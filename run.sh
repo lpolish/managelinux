@@ -11,10 +11,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Installation paths
-INSTALL_DIR="/usr/local/bin/linux_quick_manage"
-SYMLINK_DIR="/usr/local/bin"
-BIN_NAME="managelinux"
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load configuration if available
+if [ -f "$SCRIPT_DIR/config.sh" ]; then
+    source "$SCRIPT_DIR/config.sh"
+else
+    # Default installation paths
+    INSTALL_DIR="/usr/local/bin/linux_quick_manage"
+    SYMLINK_DIR="/usr/local/bin"
+    BIN_NAME="managelinux"
+fi
 
 # Function to check if suite is installed
 is_installed() {
@@ -70,7 +78,12 @@ handle_install() {
         return 1
     fi
     
-    ./install.sh
+    if [ -f "$SCRIPT_DIR/install.sh" ]; then
+        "$SCRIPT_DIR/install.sh"
+    else
+        echo -e "${RED}Error: install.sh not found in $SCRIPT_DIR${NC}"
+        return 1
+    fi
 }
 
 # Function to handle uninstallation
@@ -85,7 +98,12 @@ handle_uninstall() {
         return 1
     fi
     
-    "$INSTALL_DIR/uninstall.sh"
+    if [ -f "$INSTALL_DIR/uninstall.sh" ]; then
+        "$INSTALL_DIR/uninstall.sh"
+    else
+        echo -e "${RED}Error: uninstall.sh not found in $INSTALL_DIR${NC}"
+        return 1
+    fi
 }
 
 # Function to handle updates
@@ -101,14 +119,11 @@ handle_update() {
     fi
     
     echo -e "${BLUE}Updating Server Migration and Management Suite...${NC}"
-    cd "$INSTALL_DIR" || return 1
     
-    if git pull; then
-        chmod +x *.sh
-        echo -e "${GREEN}Update completed successfully${NC}"
-        return 0
+    if [ -f "$INSTALL_DIR/update.sh" ]; then
+        "$INSTALL_DIR/update.sh"
     else
-        echo -e "${RED}Update failed${NC}"
+        echo -e "${RED}Error: update.sh not found in $INSTALL_DIR${NC}"
         return 1
     fi
 }
@@ -118,6 +133,7 @@ run_suite() {
     if is_installed; then
         # Run from installation directory
         if [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
+            cd "$INSTALL_DIR" || return 1
             "$INSTALL_DIR/server_migrator.sh"
         else
             echo -e "${RED}Error: server_migrator.sh not found in $INSTALL_DIR${NC}"
@@ -128,8 +144,9 @@ run_suite() {
         fi
     else
         # Run from current directory
-        if [ -f "./server_migrator.sh" ]; then
-            ./server_migrator.sh
+        if [ -f "$SCRIPT_DIR/server_migrator.sh" ]; then
+            cd "$SCRIPT_DIR" || return 1
+            "$SCRIPT_DIR/server_migrator.sh"
         else
             echo -e "${RED}Error: server_migrator.sh not found${NC}"
             echo -e "${YELLOW}Please run this script from the suite's directory or install it first:${NC}"

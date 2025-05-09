@@ -103,8 +103,10 @@ install_suite() {
         return 1
     fi
     
-    # Make scripts executable
-    chmod +x "$INSTALL_DIR"/*.sh
+    # Make all scripts executable and ensure proper line endings
+    echo -e "${BLUE}Setting up scripts...${NC}"
+    find "$INSTALL_DIR" -type f -name "*.sh" -exec chmod +x {} \;
+    find "$INSTALL_DIR" -type f -name "*.sh" -exec dos2unix {} \; 2>/dev/null || true
     
     # Create symlink for the main script
     ln -sf "$INSTALL_DIR/run.sh" "$BIN_DIR/managelinux"
@@ -114,7 +116,8 @@ install_suite() {
 #!/bin/bash
 cd "$(dirname "$0")"
 git pull
-chmod +x *.sh
+find . -type f -name "*.sh" -exec chmod +x {} \;
+find . -type f -name "*.sh" -exec dos2unix {} \; 2>/dev/null || true
 echo "Update completed successfully"
 EOF
     
@@ -129,6 +132,16 @@ echo "Uninstallation completed successfully"
 EOF
     
     chmod +x "$INSTALL_DIR/uninstall.sh"
+    
+    # Create a config file to store installation paths
+    cat > "$INSTALL_DIR/config.sh" << EOF
+#!/bin/bash
+# Configuration file for Server Migration and Management Suite
+INSTALL_DIR="$INSTALL_DIR"
+BIN_DIR="$BIN_DIR"
+EOF
+    
+    chmod +x "$INSTALL_DIR/config.sh"
     
     echo -e "${GREEN}Installation completed successfully${NC}"
     return 0
