@@ -16,6 +16,11 @@ INSTALL_DIR="/usr/local/bin/linux_quick_manage"
 BIN_DIR="/usr/local/bin"
 REPO_URL="https://github.com/lpolish/managelinux.git"
 
+# Ensure script is using Unix line endings
+if command -v dos2unix >/dev/null 2>&1; then
+    dos2unix "$0" >/dev/null 2>&1
+fi
+
 echo "Starting Server Migration and Management Suite installation..."
 
 # Function to check if running as root
