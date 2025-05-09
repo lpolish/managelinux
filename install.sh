@@ -44,7 +44,7 @@ ln -sf "$INSTALL_DIR/server_migrator.sh" "$SYMLINK_DIR/$BIN_NAME"
 # Verify installation
 if [ -L "$SYMLINK_DIR/$BIN_NAME" ] && [ -d "$INSTALL_DIR" ] && [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
     # Verify all required scripts are present
-    required_scripts=("server_migrator.sh" "partition_manager.sh" "migration_manager.sh" "system_info.sh" "backup_manager.sh")
+    required_scripts=("server_migrator.sh" "partition_manager.sh" "migration_manager.sh" "system_info.sh" "backup_manager.sh" "kubernetes_manager.sh")
     missing_scripts=()
     
     for script in "${required_scripts[@]}"; do
