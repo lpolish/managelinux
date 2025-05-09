@@ -37,6 +37,16 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - Automatic dependency installation
   - Custom Docker image tagging
 
+- **Kubernetes Management**
+  - Single-node cluster installation
+  - Multi-node cluster support
+  - Automatic prerequisites installation
+  - System requirements validation
+  - Worker node joining
+  - Cluster status monitoring
+  - Calico networking integration
+  - Ready for production scaling
+
 ## Requirements
 
 ### Linux Requirements
@@ -158,6 +168,16 @@ The `run.sh` script supports the following options:
    - Automatically installs required dependencies
    - Usage: `./iso_to_docker.sh <iso_file> [docker_tag]`
 
+9. **kubernetes_manager.sh**
+   - Installs and configures Kubernetes clusters
+   - Supports both single-node and multi-node setups
+   - Validates system requirements
+   - Installs Docker and Kubernetes components
+   - Configures Calico networking
+   - Manages worker node joining
+   - Monitors cluster status
+   - Usage: `./kubernetes_manager.sh`
+
 #### Project Structure
 
 ```
@@ -168,6 +188,7 @@ linux_quick_manage/
 ├── system_info.sh       # System information
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
+├── kubernetes_manager.sh # Kubernetes installation and management
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── README.md           # Documentation
@@ -250,6 +271,7 @@ linux_quick_manage/
 ├── system_info.sh       # System information
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
+├── kubernetes_manager.sh # Kubernetes installation and management
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
