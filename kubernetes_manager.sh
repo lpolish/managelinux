@@ -231,7 +231,7 @@ join_worker_node() {
     if [ -z "$1" ]; then
         echo -e "${RED}Please provide the join command from the master node${NC}"
         return 1
-    }
+    fi
     
     # Execute the join command
     eval "$1"
