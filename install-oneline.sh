@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # One-line installer for Server Migration and Management Suite
-# Usage: curl -sSL https://raw.githubusercontent.com/lpolish/managelinux/main/install-oneline.sh | sudo bash
+# Repo: https://github.com/lpolish/managelinuxr
+# Version: 1.0.0
 
 # Color definitions
 RED='\033[0;31m'
@@ -11,16 +12,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Installation paths
-INSTALL_DIR="/usr/local/lib/managelinux"
+INSTALL_DIR="/usr/local/bin/linux_quick_manage"
 BIN_DIR="/usr/local/bin"
 REPO_URL="https://github.com/lpolish/managelinux.git"
 
-# Function to cleanup on exit
-cleanup() {
-    if [ -d "$TEMP_DIR" ]; then
-        rm -rf "$TEMP_DIR"
-    fi
-}
+echo "Starting Server Migration and Management Suite installation..."
 
 # Set up cleanup on script exit
 trap cleanup EXIT
@@ -145,17 +141,17 @@ echo -e "${BLUE}Starting Server Migration and Management Suite installation...${
 check_root
 
 # Check system requirements
-if ! check_requirements; then
+check_requirements || {
+    echo -e "${RED}System requirements check failed${NC}"
     exit 1
-fi
+}
 
 # Install the suite
-if ! install_suite; then
+install_suite || {
     echo -e "${RED}Installation failed${NC}"
     exit 1
-fi
+}
 
-echo -e "${GREEN}Installation completed successfully${NC}"
+echo -e "${GREEN}Installation completed successfully!${NC}"
 echo -e "You can now run the suite using: ${YELLOW}managelinux${NC}"
-echo -e "To update, run: ${YELLOW}managelinux update${NC}"
-echo -e "To uninstall, run: ${YELLOW}/usr/local/lib/managelinux/uninstall.sh${NC}" 
+echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}" 

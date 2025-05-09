@@ -23,6 +23,8 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - Service status monitoring
   - Hardware details
   - System logs viewer
+  - Migration report generation
+  - Live USB creation for Ubuntu 22.04
 
 - **Backup Management**
   - Create system backups
@@ -61,7 +63,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 - Windows 10 or later
 - PowerShell 5.1 or later
 - Administrator privileges
-- Docker Desktop for Windows
+- Docker Desktop for Windows (for ISO to Docker conversion)
 - 7-Zip (automatically installed if missing)
 
 ## Installation
@@ -72,7 +74,7 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
 
 1. One-line installation:
    ```bash
-   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install-oneline.sh | bash
+   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/install-oneline.sh | sudo bash
    ```
 
 2. Or clone and install manually:
@@ -98,8 +100,29 @@ The suite can be used in two ways:
    sudo ./run.sh --install    # Install the suite system-wide
    managelinux            # Run the installed suite
    managelinux --update   # Update to the latest version
-   sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # Uninstall
    ```
+
+#### Uninstallation
+
+The suite can be uninstalled in two ways:
+
+1. **One-line Uninstaller** (recommended):
+   ```bash
+   curl https://raw.githubusercontent.com/lpolish/managelinux/refs/heads/main/uninstall-oneline.sh | sudo bash
+   ```
+
+2. **Manual Uninstallation**:
+   ```bash
+   sudo ./uninstall.sh   # If you have a local copy
+   # OR
+   sudo /usr/local/bin/linux_quick_manage/uninstall.sh  # If installed system-wide
+   ```
+
+The uninstaller will:
+- Remove all installation directories (both old and new paths)
+- Remove the system-wide symlink
+- Provide detailed feedback about the uninstallation process
+- Handle any existing installations from previous versions
 
 #### Command-line Options
 
@@ -178,6 +201,21 @@ The `run.sh` script supports the following options:
    - Monitors cluster status
    - Usage: `./kubernetes_manager.sh`
 
+10. **generate_migration_report.sh**
+    - Generates comprehensive system reports for migration preparation
+    - Collects detailed system information and configurations
+    - Creates timestamped reports in migration_reports directory
+    - Includes software versions, services, and security information
+    - Usage: `./generate_migration_report.sh`
+
+11. **create_live_usb.sh**
+    - Creates bootable Ubuntu 22.04 live USB
+    - Downloads Ubuntu 22.04 ISO if not present
+    - Lists available USB drives
+    - Handles drive formatting and ISO writing
+    - Includes safety checks and progress monitoring
+    - Usage: `sudo ./create_live_usb.sh`
+
 #### Project Structure
 
 ```
@@ -189,6 +227,8 @@ linux_quick_manage/
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
 ├── kubernetes_manager.sh # Kubernetes installation and management
+├── generate_migration_report.sh  # Migration report generator
+├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── README.md           # Documentation
@@ -249,13 +289,39 @@ This tool performs system-level operations that can potentially damage your syst
 3. **Using the ISO to Docker Converter**:
    ```powershell
    # Using the installed version
-   Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -ArgumentList "path\to\your.iso" "custom-tag"
+   Start-Process "C:\Program Files\ServerMigrationSuite\iso_to_docker.ps1" -Verb RunAs
 
    # Or run directly from the repository
    .\iso_to_docker.ps1 -IsoPath "path\to\your.iso" -DockerTag "custom-tag"
    ```
 
-4. **Uninstallation**:
+   Features:
+   - Automatic 7-Zip installation if missing
+   - Progress feedback during extraction
+   - Error handling and validation
+   - Clean temporary files
+   - Interactive user prompts
+   - Color-coded output for better visibility
+
+4. **Creating Live USB**:
+   ```powershell
+   # Using the installed version
+   Start-Process "C:\Program Files\ServerMigrationSuite\create_live_usb.ps1" -Verb RunAs
+
+   # Or run directly from the repository
+   .\create_live_usb.ps1
+   ```
+
+   Features:
+   - Automatic Rufus installation if missing
+   - USB drive detection and validation
+   - Automatic Ubuntu ISO download
+   - Progress feedback during operations
+   - Error handling and validation
+   - Interactive user prompts
+   - Color-coded output for better visibility
+
+5. **Uninstallation**:
    ```powershell
    # Run the uninstaller
    & "C:\Program Files\ServerMigrationSuite\uninstall.ps1"
@@ -272,11 +338,14 @@ linux_quick_manage/
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
 ├── kubernetes_manager.sh # Kubernetes installation and management
+├── generate_migration_report.sh  # Migration report generator
+├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
 ├── install.sh          # Installation script
 ├── windows/            # Windows-specific scripts
-│   ├── iso_to_docker.ps1  # Windows ISO to Docker converter
-│   └── install.ps1        # Windows installation script
+│   ├── iso_to_docker.ps1      # Windows ISO to Docker converter
+│   ├── create_live_usb.ps1    # Windows Live USB creator
+│   └── install.ps1            # Windows installation script
 ├── README.md           # Documentation
 └── LICENSE             # License file
 ``` 
