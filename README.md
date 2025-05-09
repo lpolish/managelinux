@@ -49,6 +49,22 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - Calico networking integration
   - Ready for production scaling
 
+- **Git Server Management**
+  - SSH-based Git server installation
+  - Secure repository hosting
+  - User and SSH key management
+  - Repository creation and listing
+  - Server status monitoring
+  - Ready for Kubernetes deployment
+
+- **User Management**
+  - Create and delete system users
+  - Manage user groups and permissions
+  - Integrated Git server access control
+  - SSH key management
+  - User listing and status monitoring
+  - Secure password handling
+
 ## Requirements
 
 ### Linux Requirements
@@ -216,6 +232,33 @@ The `run.sh` script supports the following options:
     - Includes safety checks and progress monitoring
     - Usage: `sudo ./create_live_usb.sh`
 
+12. **git_server_manager.sh**
+    - Installs and configures SSH-based Git server
+    - Creates dedicated git user with proper permissions
+    - Manages SSH keys for secure access
+    - Handles repository creation and listing
+    - Monitors server status
+    - Usage: `./git_server_manager.sh [OPTION]`
+    - Options:
+      - `-i, --install`: Install Git server
+      - `-a, --add-key`: Add SSH key
+      - `-c, --create`: Create new repository
+      - `-l, --list`: List repositories
+      - `-s, --status`: Show Git server status
+
+13. **user_manager.sh**
+    - Manages system users and permissions
+    - Creates and deletes users
+    - Manages Git server access
+    - Handles SSH key generation and management
+    - Lists users and their access levels
+    - Usage: `./user_manager.sh [OPTION]`
+    - Options:
+      - `-c, --create`: Create new user
+      - `-d, --delete`: Delete user
+      - `-l, --list`: List users
+      - `-g, --git`: Manage Git server access
+
 #### Project Structure
 
 ```
@@ -227,6 +270,8 @@ linux_quick_manage/
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
 ├── kubernetes_manager.sh # Kubernetes installation and management
+├── git_server_manager.sh # Git server installation and management
+├── user_manager.sh      # User management and access control
 ├── generate_migration_report.sh  # Migration report generator
 ├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
@@ -338,6 +383,8 @@ linux_quick_manage/
 ├── backup_manager.sh    # Backup management
 ├── iso_to_docker.sh     # ISO to Docker converter
 ├── kubernetes_manager.sh # Kubernetes installation and management
+├── git_server_manager.sh # Git server installation and management
+├── user_manager.sh      # User management and access control
 ├── generate_migration_report.sh  # Migration report generator
 ├── create_live_usb.sh   # Live USB creator
 ├── run.sh              # Entry point script
