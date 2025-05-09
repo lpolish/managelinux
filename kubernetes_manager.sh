@@ -250,13 +250,27 @@ show_cluster_status() {
 # Handle command line arguments
 if [ "$#" -gt 0 ]; then
     case "$1" in
+        "install")
+            if check_requirements && install_prerequisites && install_kubernetes_components && initialize_cluster; then
+                echo -e "${GREEN}Kubernetes installation completed successfully${NC}"
+                exit 0
+            else
+                echo -e "${RED}Kubernetes installation failed${NC}"
+                exit 1
+            fi
+            ;;
         "join")
             if [ -z "$2" ]; then
                 echo -e "${RED}Error: Join command is required${NC}"
                 exit 1
             fi
-            join_worker_node "$2"
-            exit 0
+            if join_worker_node "$2"; then
+                echo -e "${GREEN}Worker node joined successfully${NC}"
+                exit 0
+            else
+                echo -e "${RED}Failed to join worker node${NC}"
+                exit 1
+            fi
             ;;
         "status")
             show_cluster_status
@@ -264,7 +278,7 @@ if [ "$#" -gt 0 ]; then
             ;;
         *)
             echo -e "${RED}Invalid command: $1${NC}"
-            echo "Usage: $0 [join <command>|status]"
+            echo "Usage: $0 [install|join <command>|status]"
             exit 1
             ;;
     esac
