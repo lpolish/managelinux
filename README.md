@@ -65,6 +65,23 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - User listing and status monitoring
   - Secure password handling
 
+- **Samba Management**
+  - Install and configure Samba server
+  - Create and manage network shares
+  - User authentication and access control
+  - Share permissions management
+  - Active connections monitoring
+  - Secure configuration backup
+
+- **SSH Management**
+  - Install and configure SSH server
+  - Manage SSH keys and authorized users
+  - Configure security settings
+  - Monitor active connections
+  - Custom port configuration
+  - Root login control
+  - Password authentication control
+
 ## Requirements
 
 ### Linux Requirements
@@ -258,6 +275,35 @@ The `run.sh` script supports the following options:
       - `-d, --delete`: Delete user
       - `-l, --list`: List users
       - `-g, --git`: Manage Git server access
+
+14. **samba_manager.sh**
+    - Installs and configures Samba server
+    - Creates and manages network shares
+    - Handles user authentication
+    - Manages share permissions
+    - Monitors active connections
+    - Usage: `./samba_manager.sh`
+    - Features:
+      - Install Samba server
+      - Create new shares
+      - List existing shares
+      - Remove shares
+      - Add Samba users
+      - Show server status
+
+15. **ssh_manager.sh**
+    - Installs and configures SSH server
+    - Manages SSH keys and authorized users
+    - Configures security settings
+    - Monitors active connections
+    - Usage: `./ssh_manager.sh`
+    - Features:
+      - Install SSH server
+      - Add/remove SSH keys
+      - List authorized keys
+      - Configure server settings
+      - Monitor connections
+      - Security hardening
 
 #### Project Structure
 
