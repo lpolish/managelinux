@@ -96,19 +96,19 @@ install_prerequisites() {
     fi
     
     # Install required packages
-    if ! apt-get install -y apt-transport-https ca-certificates curl software-properties-common; then
+    if ! apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release; then
         echo -e "${RED}Failed to install required packages${NC}"
         return 1
     fi
     
     # Add Docker's official GPG key
-    if ! curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -; then
+    if ! curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg; then
         echo -e "${RED}Failed to add Docker's GPG key${NC}"
         return 1
     fi
     
     # Add Docker repository
-    if ! add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"; then
+    if ! echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null; then
         echo -e "${RED}Failed to add Docker repository${NC}"
         return 1
     fi
@@ -151,13 +151,13 @@ install_kubernetes_components() {
     echo -e "${BLUE}Installing Kubernetes components...${NC}"
     
     # Add Kubernetes GPG key
-    if ! curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -; then
+    if ! curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/kubernetes-archive-keyring.gpg; then
         echo -e "${RED}Failed to add Kubernetes GPG key${NC}"
         return 1
     fi
     
     # Add Kubernetes repository
-    if ! echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list; then
+    if ! echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null; then
         echo -e "${RED}Failed to add Kubernetes repository${NC}"
         return 1
     fi
@@ -210,7 +210,7 @@ initialize_cluster() {
     fi
     
     # Install Calico network plugin
-    if ! kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f https://docs.projectcalico.org/v3.25/manifests/calico.yaml; then
+    if ! kubectl --kubeconfig=/etc/kubernetes/admin.conf apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml; then
         echo -e "${RED}Failed to install Calico network plugin${NC}"
         return 1
     fi
@@ -283,14 +283,25 @@ show_menu() {
         
         case $choice in
             1)
-                check_requirements && install_prerequisites && install_kubernetes_components && initialize_cluster
+                if check_requirements && install_prerequisites && install_kubernetes_components && initialize_cluster; then
+                    echo -e "${GREEN}Kubernetes installation completed successfully${NC}"
+                else
+                    echo -e "${RED}Kubernetes installation failed${NC}"
+                fi
+                read -p "Press Enter to continue..."
                 ;;
             2)
                 read -p "Enter the join command from the master node: " join_cmd
-                join_worker_node "$join_cmd"
+                if join_worker_node "$join_cmd"; then
+                    echo -e "${GREEN}Worker node joined successfully${NC}"
+                else
+                    echo -e "${RED}Failed to join worker node${NC}"
+                fi
+                read -p "Press Enter to continue..."
                 ;;
             3)
                 show_cluster_status
+                read -p "Press Enter to continue..."
                 ;;
             4)
                 echo -e "${GREEN}Exiting...${NC}"
@@ -298,6 +309,7 @@ show_menu() {
                 ;;
             *)
                 echo -e "${RED}Invalid option${NC}"
+                read -p "Press Enter to continue..."
                 ;;
         esac
     done

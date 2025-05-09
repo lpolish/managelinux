@@ -18,9 +18,6 @@ REPO_URL="https://github.com/lpolish/managelinux.git"
 
 echo "Starting Server Migration and Management Suite installation..."
 
-# Set up cleanup on script exit
-trap cleanup EXIT
-
 # Function to check if running as root
 check_root() {
     if [ "$EUID" -ne 0 ]; then
