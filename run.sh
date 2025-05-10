@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Main Entry Script for Server Migration and Management Suite
-# Repo: https://github.com/lpolish/managelinuxr
+# Server Migration and Management Suite
+# Main Entry Point
+# Repo: https://github.com/lpolish/managelinux
 # Version: 1.0.0
 
 # Color definitions
@@ -11,175 +12,163 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Get script directory
+# Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load configuration if available
-if [ -f "$SCRIPT_DIR/config.sh" ]; then
-    source "$SCRIPT_DIR/config.sh"
-else
-    # Default installation paths
-    INSTALL_DIR="/usr/local/bin/linux_quick_manage"
-    SYMLINK_DIR="/usr/local/bin"
-    BIN_NAME="managelinux"
-fi
-
-# Function to check if suite is installed
-is_installed() {
-    [ -L "$SYMLINK_DIR/$BIN_NAME" ] && [ -d "$INSTALL_DIR" ]
-}
-
-# Function to show installation status
-show_status() {
-    if is_installed; then
-        echo -e "${GREEN}Server Migration and Management Suite is installed${NC}"
-        echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}"
-        echo -e "Command: ${YELLOW}$BIN_NAME${NC}"
-        echo -e "To update, run: ${YELLOW}$BIN_NAME --update${NC}"
-        echo -e "To uninstall, run: ${YELLOW}$INSTALL_DIR/uninstall.sh${NC}"
-    else
-        echo -e "${YELLOW}Server Migration and Management Suite is not installed${NC}"
-        echo -e "To install, run: ${YELLOW}sudo ./install.sh${NC}"
-    fi
-}
-
-# Function to show help
-show_help() {
-    echo -e "${BLUE}Server Migration and Management Suite${NC}"
-    echo
-    echo "Usage: $0 [OPTION]"
-    echo
-    echo "Options:"
-    echo "  -h, --help     Show this help message"
-    echo "  -s, --status   Show installation status"
-    echo "  -i, --install  Install the suite"
-    echo "  -u, --uninstall Uninstall the suite"
-    echo "  -U, --update   Update the suite to the latest version"
-    echo "  -r, --run      Run the suite (default if no option provided)"
-    echo
-    echo "Examples:"
-    echo "  $0              # Run the suite"
-    echo "  $0 --status     # Show installation status"
-    echo "  $0 --install    # Install the suite"
-    echo "  $0 --update     # Update the suite"
-    echo "  $0 --uninstall  # Uninstall the suite"
-}
-
-# Function to handle installation
-handle_install() {
-    if is_installed; then
-        echo -e "${YELLOW}Suite is already installed${NC}"
-        show_status
-        return 1
-    fi
-    
+# Function to check if running as root
+check_root() {
     if [ "$EUID" -ne 0 ]; then
-        echo -e "${RED}Please run as root or with sudo privileges${NC}"
-        return 1
-    fi
-    
-    if [ -f "$SCRIPT_DIR/install.sh" ]; then
-        "$SCRIPT_DIR/install.sh"
-    else
-        echo -e "${RED}Error: install.sh not found in $SCRIPT_DIR${NC}"
-        return 1
-    fi
-}
-
-# Function to handle uninstallation
-handle_uninstall() {
-    if ! is_installed; then
-        echo -e "${YELLOW}Suite is not installed${NC}"
-        return 1
-    fi
-    
-    if [ "$EUID" -ne 0 ]; then
-        echo -e "${RED}Please run as root or with sudo privileges${NC}"
-        return 1
-    fi
-    
-    if [ -f "$INSTALL_DIR/uninstall.sh" ]; then
-        "$INSTALL_DIR/uninstall.sh"
-    else
-        echo -e "${RED}Error: uninstall.sh not found in $INSTALL_DIR${NC}"
-        return 1
-    fi
-}
-
-# Function to handle updates
-handle_update() {
-    if ! is_installed; then
-        echo -e "${YELLOW}Suite is not installed${NC}"
-        return 1
-    fi
-    
-    if [ "$EUID" -ne 0 ]; then
-        echo -e "${RED}Please run as root or with sudo privileges${NC}"
-        return 1
-    fi
-    
-    echo -e "${BLUE}Updating Server Migration and Management Suite...${NC}"
-    
-    if [ -f "$INSTALL_DIR/update.sh" ]; then
-        "$INSTALL_DIR/update.sh"
-    else
-        echo -e "${RED}Error: update.sh not found in $INSTALL_DIR${NC}"
-        return 1
-    fi
-}
-
-# Function to run the suite
-run_suite() {
-    if is_installed; then
-        # Run from installation directory
-        if [ -f "$INSTALL_DIR/server_migrator.sh" ]; then
-            cd "$INSTALL_DIR" || return 1
-            "$INSTALL_DIR/server_migrator.sh"
-        else
-            echo -e "${RED}Error: server_migrator.sh not found in $INSTALL_DIR${NC}"
-            echo -e "${YELLOW}The installation may be corrupted. Please try:${NC}"
-            echo -e "1. Uninstall: ${YELLOW}sudo $INSTALL_DIR/uninstall.sh${NC}"
-            echo -e "2. Reinstall: ${YELLOW}sudo ./install.sh${NC}"
-            return 1
-        fi
-    else
-        # Run from current directory
-        if [ -f "$SCRIPT_DIR/server_migrator.sh" ]; then
-            cd "$SCRIPT_DIR" || return 1
-            "$SCRIPT_DIR/server_migrator.sh"
-        else
-            echo -e "${RED}Error: server_migrator.sh not found${NC}"
-            echo -e "${YELLOW}Please run this script from the suite's directory or install it first:${NC}"
-            echo -e "1. Install: ${YELLOW}sudo ./install.sh${NC}"
-            echo -e "2. Or run: ${YELLOW}sudo ./run.sh --install${NC}"
-            return 1
-        fi
-    fi
-}
-
-# Main script logic
-case "$1" in
-    -h|--help)
-        show_help
-        ;;
-    -s|--status)
-        show_status
-        ;;
-    -i|--install)
-        handle_install
-        ;;
-    -u|--uninstall)
-        handle_uninstall
-        ;;
-    -U|--update)
-        handle_update
-        ;;
-    -r|--run|"")
-        run_suite
-        ;;
-    *)
-        echo -e "${RED}Invalid option: $1${NC}"
-        show_help
+        echo -e "${RED}This script must be run as root${NC}"
         exit 1
-        ;;
-esac 
+    fi
+}
+
+# Function to show main menu
+show_menu() {
+    clear
+    echo -e "${BLUE}=== Server Migration and Management Suite ===${NC}"
+    echo
+    echo "1. Partition Management"
+    echo "2. System Migration"
+    echo "3. System Information"
+    echo "4. Backup Management"
+    echo "5. Container Management"
+    echo "6. Git Server Management"
+    echo "7. User Management"
+    echo "8. Exit"
+    echo
+    echo -n "Enter your choice (1-8): "
+}
+
+# Function to handle container management
+handle_container_management() {
+    while true; do
+        clear
+        echo -e "${BLUE}=== Container Management ===${NC}"
+        echo
+        echo "1. Initialize Application"
+        echo "2. List Applications"
+        echo "3. Start Application"
+        echo "4. Stop Application"
+        echo "5. Restart Application"
+        echo "6. Update Application"
+        echo "7. Show Application Status"
+        echo "8. Backup Application"
+        echo "9. Restore Application"
+        echo "10. Cleanup Resources"
+        echo "11. Generate Kubernetes Manifests"
+        echo "12. Return to Main Menu"
+        echo
+        echo -n "Enter your choice (1-12): "
+        read -r choice
+
+        case $choice in
+            1)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" init "$app_name"
+                ;;
+            2)
+                "$SCRIPT_DIR/container_manager.sh" list
+                ;;
+            3)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" start "$app_name"
+                ;;
+            4)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" stop "$app_name"
+                ;;
+            5)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" restart "$app_name"
+                ;;
+            6)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" update "$app_name"
+                ;;
+            7)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" status "$app_name"
+                ;;
+            8)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" backup "$app_name"
+                ;;
+            9)
+                echo -n "Enter application name: "
+                read -r app_name
+                echo -n "Enter backup date (YYYY-MM-DD): "
+                read -r backup_date
+                "$SCRIPT_DIR/container_manager.sh" restore "$app_name" "$backup_date"
+                ;;
+            10)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" cleanup "$app_name"
+                ;;
+            11)
+                echo -n "Enter application name: "
+                read -r app_name
+                "$SCRIPT_DIR/container_manager.sh" migrate "$app_name"
+                ;;
+            12)
+                return
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                ;;
+        esac
+        echo
+        echo -n "Press Enter to continue..."
+        read -r
+    done
+}
+
+# Main script
+check_root
+
+while true; do
+    show_menu
+    read -r choice
+
+    case $choice in
+        1)
+            "$SCRIPT_DIR/partition_manager.sh"
+            ;;
+        2)
+            "$SCRIPT_DIR/migration_manager.sh"
+            ;;
+        3)
+            "$SCRIPT_DIR/system_info.sh"
+            ;;
+        4)
+            "$SCRIPT_DIR/backup_manager.sh"
+            ;;
+        5)
+            handle_container_management
+            ;;
+        6)
+            "$SCRIPT_DIR/git_server_manager.sh"
+            ;;
+        7)
+            "$SCRIPT_DIR/user_manager.sh"
+            ;;
+        8)
+            echo -e "${GREEN}Goodbye!${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            ;;
+    esac
+    echo
+    echo -n "Press Enter to continue..."
+    read -r
+done 
