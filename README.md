@@ -39,15 +39,28 @@ A comprehensive command-line suite for managing Debian-based Linux servers, with
   - Automatic dependency installation
   - Custom Docker image tagging
 
-- **Kubernetes Management**
-  - Single-node cluster installation
-  - Multi-node cluster support
-  - Automatic prerequisites installation
-  - System requirements validation
-  - Worker node joining
-  - Cluster status monitoring
-  - Calico networking integration
-  - Ready for production scaling
+- **Container Management**
+  - Comprehensive Docker and Docker Compose management
+  - Application-based organization and isolation
+  - Automatic health checks and monitoring
+  - Resource usage tracking and optimization
+  - Backup and restore capabilities
+  - Volume management and persistence
+  - Network configuration and isolation
+  - Kubernetes migration preparation
+  - Application metadata and state tracking
+  - Structured directory layout:
+    ```
+    applications/
+    ├── app_name/
+    │   ├── docker-compose.yml
+    │   ├── metadata.json
+    │   ├── config/
+    │   ├── logs/
+    │   ├── backups/
+    │   └── kubernetes-manifests/
+    └── ...
+    ```
 
 - **Git Server Management**
   - SSH-based Git server installation
@@ -224,15 +237,48 @@ The `run.sh` script supports the following options:
    - Automatically installs required dependencies
    - Usage: `./iso_to_docker.sh <iso_file> [docker_tag]`
 
-9. **kubernetes_manager.sh**
-   - Installs and configures Kubernetes clusters
-   - Supports both single-node and multi-node setups
-   - Validates system requirements
-   - Installs Docker and Kubernetes components
-   - Configures Calico networking
-   - Manages worker node joining
-   - Monitors cluster status
-   - Usage: `./kubernetes_manager.sh`
+9. **container_manager.sh**
+   - Comprehensive container management
+   - Application-based organization
+   - Health monitoring and resource tracking
+   - Backup and restore functionality
+   - Volume and network management
+   - Kubernetes migration support
+   - Application structure:
+     ```
+     applications/
+     ├── app_name/
+     │   ├── docker-compose.yml
+     │   ├── metadata.json
+     │   ├── config/
+     │   ├── logs/
+     │   ├── backups/
+     │   └── kubernetes-manifests/
+     └── ...
+     ```
+   - Usage: `./container_manager.sh [OPTION] [APP_NAME] [BACKUP_DATE]`
+   - Options:
+     - `init [APP_NAME]`: Initialize new application structure
+     - `list`: List all applications
+     - `start [APP_NAME]`: Start Docker Compose services
+     - `stop [APP_NAME]`: Stop Docker Compose services
+     - `restart [APP_NAME]`: Restart Docker Compose services
+     - `update [APP_NAME]`: Update Docker Compose services
+     - `status [APP_NAME]`: Show service status
+     - `cleanup [APP_NAME]`: Clean up unused Docker resources
+     - `migrate [APP_NAME]`: Generate Kubernetes manifests
+     - `backup [APP_NAME]`: Backup application
+     - `restore [APP_NAME] [BACKUP_DATE]`: Restore application from backup
+     - `help`: Show help message
+   - Features:
+     - Automatic health checks
+     - Resource usage monitoring
+     - Volume backup and restore
+     - Network isolation
+     - Application state tracking
+     - Kubernetes manifest generation
+     - Backup versioning
+     - Configuration management
 
 10. **generate_migration_report.sh**
     - Generates comprehensive system reports for migration preparation
