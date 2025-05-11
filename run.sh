@@ -12,8 +12,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Script directory - use the installation directory
+SCRIPT_DIR="/usr/local/bin/linux_quick_manage"
 
 # Function to check if running as root
 check_root() {
@@ -22,6 +22,32 @@ check_root() {
         exit 1
     fi
 }
+
+# Function to uninstall the suite
+uninstall_suite() {
+    echo -e "${YELLOW}Uninstalling Server Migration and Management Suite...${NC}"
+    
+    # Remove installation directory
+    if [ -d "$SCRIPT_DIR" ]; then
+        rm -rf "$SCRIPT_DIR"
+        echo -e "${GREEN}Removed installation directory${NC}"
+    fi
+    
+    # Remove symlink
+    if [ -L "/usr/local/bin/managelinux" ]; then
+        rm -f "/usr/local/bin/managelinux"
+        echo -e "${GREEN}Removed symlink${NC}"
+    fi
+    
+    echo -e "${GREEN}Uninstallation completed successfully${NC}"
+    exit 0
+}
+
+# Check for uninstall parameter
+if [ "$1" = "--uninstall" ]; then
+    check_root
+    uninstall_suite
+fi
 
 # Function to show main menu
 show_menu() {
@@ -35,9 +61,10 @@ show_menu() {
     echo "5. Container Management"
     echo "6. Git Server Management"
     echo "7. User Management"
-    echo "8. Exit"
+    echo "8. Uninstall Suite"
+    echo "9. Exit"
     echo
-    echo -n "Enter your choice (1-8): "
+    echo -n "Enter your choice (1-9): "
 }
 
 # Function to handle container management
@@ -161,6 +188,13 @@ while true; do
             "$SCRIPT_DIR/user_manager.sh"
             ;;
         8)
+            echo -e "${YELLOW}Are you sure you want to uninstall the suite? (y/N)${NC}"
+            read -r confirm
+            if [[ $confirm =~ ^[Yy]$ ]]; then
+                uninstall_suite
+            fi
+            ;;
+        9)
             echo -e "${GREEN}Goodbye!${NC}"
             exit 0
             ;;
