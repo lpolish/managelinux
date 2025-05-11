@@ -46,15 +46,22 @@ check_requirements() {
 
 # Function to clean up old installation
 cleanup_old_install() {
+    echo -e "${BLUE}Cleaning up old installation...${NC}"
+    
+    # Remove old installation directory
     if [ -d "$INSTALL_DIR" ]; then
-        echo -e "${YELLOW}Removing old installation...${NC}"
+        echo -e "${YELLOW}Removing old installation directory...${NC}"
         rm -rf "$INSTALL_DIR"
     fi
     
+    # Remove old symlink
     if [ -L "$SYMLINK_DIR/$BIN_NAME" ]; then
         echo -e "${YELLOW}Removing old symlink...${NC}"
         rm -f "$SYMLINK_DIR/$BIN_NAME"
     fi
+    
+    # Create fresh directory
+    mkdir -p "$INSTALL_DIR"
 }
 
 # Main installation process
@@ -68,10 +75,6 @@ check_requirements
 
 # Clean up old installation
 cleanup_old_install
-
-# Create installation directory
-echo -e "${BLUE}Installing Server Migration and Management Suite...${NC}"
-mkdir -p "$INSTALL_DIR"
 
 # Clone repository
 echo -e "${BLUE}Cloning repository...${NC}"
