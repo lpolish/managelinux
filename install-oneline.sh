@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # One-line installer for Server Migration and Management Suite
-# Repo: https://github.com/lpolish/managelinuxr
+# Repo: https://github.com/lpolish/managelinux
 # Version: 1.0.0
 
 # Color definitions
@@ -13,15 +13,8 @@ NC='\033[0m' # No Color
 
 # Installation paths
 INSTALL_DIR="/usr/local/bin/linux_quick_manage"
-BIN_DIR="/usr/local/bin"
-REPO_URL="https://github.com/lpolish/managelinux.git"
-
-# Ensure script is using Unix line endings
-if command -v dos2unix >/dev/null 2>&1; then
-    dos2unix "$0" >/dev/null 2>&1
-fi
-
-echo "Starting Server Migration and Management Suite installation..."
+SYMLINK_DIR="/usr/local/bin"
+BIN_NAME="managelinux"
 
 # Function to check if running as root
 check_root() {
@@ -35,118 +28,33 @@ check_root() {
 check_requirements() {
     echo -e "${BLUE}Checking system requirements...${NC}"
     
-    # Ensure apt-get is available first
-    if ! command -v apt-get &> /dev/null; then
-        echo -e "${RED}This script requires apt-get package manager${NC}"
-        return 1
-    fi
-    
     # Update package list
     echo -e "${BLUE}Updating package list...${NC}"
-    apt-get update || {
-        echo -e "${RED}Failed to update package list${NC}"
-        return 1
-    }
+    apt-get update
     
-    # Map commands to their package names
-    declare -A cmd_packages=(
-        ["git"]="git"
-        ["fdisk"]="util-linux"
-        ["parted"]="parted"
-        ["tar"]="tar"
-        ["dpkg"]="dpkg"
-        ["curl"]="curl"
-    )
-    
-    # Check and install required packages
-    local missing_packages=()
-    local missing_commands=()
-    
-    for cmd in "${!cmd_packages[@]}"; do
-        if ! command -v "$cmd" &> /dev/null; then
-            echo -e "${YELLOW}Required command not found: $cmd${NC}"
-            missing_commands+=("$cmd")
-            missing_packages+=("${cmd_packages[$cmd]}")
+    # Check for required packages
+    local required_packages=("git" "curl" "wget")
+    for package in "${required_packages[@]}"; do
+        if ! dpkg -l | grep -q "^ii  $package "; then
+            echo -e "${YELLOW}Installing $package...${NC}"
+            apt-get install -y "$package"
         fi
     done
     
-    # Install missing packages if any
-    if [ ${#missing_packages[@]} -gt 0 ]; then
-        echo -e "${BLUE}Installing missing packages: ${missing_packages[*]}${NC}"
-        if ! apt-get install -y "${missing_packages[@]}"; then
-            echo -e "${RED}Failed to install required packages${NC}"
-            return 1
-        fi
-        
-        # Verify commands are now available
-        for cmd in "${missing_commands[@]}"; do
-            if ! command -v "$cmd" &> /dev/null; then
-                echo -e "${RED}Command '$cmd' is still not available after package installation${NC}"
-                return 1
-            fi
-        done
-    fi
-    
     echo -e "${GREEN}System requirements met${NC}"
-    return 0
 }
 
-# Function to install the suite
-install_suite() {
-    echo -e "${BLUE}Installing Server Migration and Management Suite...${NC}"
-    
-    # Create installation directory if it doesn't exist
-    mkdir -p "$INSTALL_DIR"
-    
-    # Clone the repository
-    echo -e "${BLUE}Cloning repository...${NC}"
-    if ! git clone "$REPO_URL" "$INSTALL_DIR"; then
-        echo -e "${RED}Failed to clone repository${NC}"
-        return 1
+# Function to clean up old installation
+cleanup_old_install() {
+    if [ -d "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}Removing old installation...${NC}"
+        rm -rf "$INSTALL_DIR"
     fi
     
-    # Make all scripts executable and ensure proper line endings
-    echo -e "${BLUE}Setting up scripts...${NC}"
-    find "$INSTALL_DIR" -type f -name "*.sh" -exec chmod +x {} \;
-    find "$INSTALL_DIR" -type f -name "*.sh" -exec dos2unix {} \; 2>/dev/null || true
-    
-    # Create symlink for the main script
-    ln -sf "$INSTALL_DIR/run.sh" "$BIN_DIR/managelinux"
-    
-    # Create update script
-    cat > "$INSTALL_DIR/update.sh" << 'EOF'
-#!/bin/bash
-cd "$(dirname "$0")"
-git pull
-find . -type f -name "*.sh" -exec chmod +x {} \;
-find . -type f -name "*.sh" -exec dos2unix {} \; 2>/dev/null || true
-echo "Update completed successfully"
-EOF
-    
-    chmod +x "$INSTALL_DIR/update.sh"
-    
-    # Create uninstall script
-    cat > "$INSTALL_DIR/uninstall.sh" << EOF
-#!/bin/bash
-rm -f "$BIN_DIR/managelinux"
-rm -rf "$INSTALL_DIR"
-echo "Uninstallation completed successfully"
-EOF
-    
-    chmod +x "$INSTALL_DIR/uninstall.sh"
-    
-    # Create a config file to store installation paths
-    cat > "$INSTALL_DIR/config.sh" << EOF
-#!/bin/bash
-# Configuration file for Server Migration and Management Suite
-INSTALL_DIR="$INSTALL_DIR"
-BIN_DIR="$BIN_DIR"
-EOF
-    
-    chmod +x "$INSTALL_DIR/config.sh"
-    
-    echo -e "${GREEN}Installation completed successfully${NC}"
-    return 0
+    if [ -L "$SYMLINK_DIR/$BIN_NAME" ]; then
+        echo -e "${YELLOW}Removing old symlink...${NC}"
+        rm -f "$SYMLINK_DIR/$BIN_NAME"
+    fi
 }
 
 # Main installation process
@@ -156,17 +64,40 @@ echo -e "${BLUE}Starting Server Migration and Management Suite installation...${
 check_root
 
 # Check system requirements
-check_requirements || {
-    echo -e "${RED}System requirements check failed${NC}"
-    exit 1
-}
+check_requirements
 
-# Install the suite
-install_suite || {
-    echo -e "${RED}Installation failed${NC}"
-    exit 1
-}
+# Clean up old installation
+cleanup_old_install
 
-echo -e "${GREEN}Installation completed successfully!${NC}"
-echo -e "You can now run the suite using: ${YELLOW}managelinux${NC}"
-echo -e "Installation directory: ${YELLOW}$INSTALL_DIR${NC}" 
+# Create installation directory
+echo -e "${BLUE}Installing Server Migration and Management Suite...${NC}"
+mkdir -p "$INSTALL_DIR"
+
+# Clone repository
+echo -e "${BLUE}Cloning repository...${NC}"
+git clone https://github.com/lpolish/managelinux.git "$INSTALL_DIR"
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Failed to clone repository${NC}"
+    exit 1
+fi
+
+# Make scripts executable
+echo -e "${BLUE}Setting up scripts...${NC}"
+chmod +x "$INSTALL_DIR"/*.sh
+
+# Create symlink
+echo -e "${BLUE}Creating symlink...${NC}"
+ln -sf "$INSTALL_DIR/run.sh" "$SYMLINK_DIR/$BIN_NAME"
+
+# Create uninstall script
+cat > "$INSTALL_DIR/uninstall.sh" << EOF
+#!/bin/bash
+rm -rf "$INSTALL_DIR"
+rm -f "$SYMLINK_DIR/$BIN_NAME"
+echo "Uninstallation completed successfully"
+EOF
+chmod +x "$INSTALL_DIR/uninstall.sh"
+
+echo -e "${GREEN}Installation completed successfully${NC}"
+echo -e "${BLUE}You can now run the suite using: ${YELLOW}managelinux${NC}" 
