@@ -64,6 +64,34 @@ cleanup_old_install() {
     mkdir -p "$INSTALL_DIR"
 }
 
+# Function to copy scripts
+copy_scripts() {
+    echo -e "${BLUE}Copying scripts...${NC}"
+    
+    # List of required scripts
+    local scripts=(
+        "run.sh"
+        "container_manager.sh"
+        "partition_manager.sh"
+        "migration_manager.sh"
+        "system_info.sh"
+        "backup_manager.sh"
+        "git_server_manager.sh"
+        "user_manager.sh"
+    )
+    
+    # Copy each script
+    for script in "${scripts[@]}"; do
+        if [ -f "$script" ]; then
+            cp "$script" "$INSTALL_DIR/"
+            chmod +x "$INSTALL_DIR/$script"
+            echo -e "${GREEN}Copied $script${NC}"
+        else
+            echo -e "${RED}Warning: $script not found${NC}"
+        fi
+    done
+}
+
 # Main installation process
 echo -e "${BLUE}Starting Server Migration and Management Suite installation...${NC}"
 
