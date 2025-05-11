@@ -384,69 +384,147 @@ restore_application() {
     echo -e "${GREEN}Restore completed successfully${NC}"
 }
 
-# Function to show help
-show_help() {
-    echo -e "${BLUE}Container Manager - Help${NC}"
+# Function to show menu
+show_menu() {
+    clear
+    echo -e "${BLUE}=== Container Management ===${NC}"
     echo
-    echo "Usage: $0 [OPTION] [APP_NAME] [BACKUP_DATE]"
+    echo "1. Initialize Application"
+    echo "2. List Applications"
+    echo "3. Start Application"
+    echo "4. Stop Application"
+    echo "5. Restart Application"
+    echo "6. Update Application"
+    echo "7. Show Application Status"
+    echo "8. Backup Application"
+    echo "9. Restore Application"
+    echo "10. Cleanup Resources"
+    echo "11. Generate Kubernetes Manifests"
+    echo "12. Return to Main Menu"
     echo
-    echo "Options:"
-    echo "  init [APP_NAME]     Initialize new application structure"
-    echo "  list               List all applications"
-    echo "  start [APP_NAME]   Start Docker Compose services"
-    echo "  stop [APP_NAME]    Stop Docker Compose services"
-    echo "  restart [APP_NAME] Restart Docker Compose services"
-    echo "  update [APP_NAME]  Update Docker Compose services"
-    echo "  status [APP_NAME]  Show service status"
-    echo "  cleanup [APP_NAME] Clean up unused Docker resources"
-    echo "  migrate [APP_NAME] Generate Kubernetes manifests"
-    echo "  backup [APP_NAME]  Backup application"
-    echo "  restore [APP_NAME] [BACKUP_DATE] Restore application from backup"
-    echo "  help              Show this help message"
-    echo
-    echo "If APP_NAME is not provided, the default application will be used."
-    echo "If BACKUP_DATE is not provided for restore, today's date will be used."
+    echo -n "Enter your choice (1-12): "
+}
+
+# Function to handle menu
+handle_menu() {
+    while true; do
+        show_menu
+        read -r choice
+
+        case $choice in
+            1)
+                echo -n "Enter application name: "
+                read -r app_name
+                init_app_structure "$app_name"
+                ;;
+            2)
+                list_applications
+                ;;
+            3)
+                echo -n "Enter application name: "
+                read -r app_name
+                start_services "$app_name"
+                ;;
+            4)
+                echo -n "Enter application name: "
+                read -r app_name
+                stop_services "$app_name"
+                ;;
+            5)
+                echo -n "Enter application name: "
+                read -r app_name
+                restart_services "$app_name"
+                ;;
+            6)
+                echo -n "Enter application name: "
+                read -r app_name
+                update_services "$app_name"
+                ;;
+            7)
+                echo -n "Enter application name: "
+                read -r app_name
+                show_status "$app_name"
+                ;;
+            8)
+                echo -n "Enter application name: "
+                read -r app_name
+                backup_application "$app_name"
+                ;;
+            9)
+                echo -n "Enter application name: "
+                read -r app_name
+                echo -n "Enter backup date (YYYY-MM-DD): "
+                read -r backup_date
+                restore_application "$app_name" "$backup_date"
+                ;;
+            10)
+                echo -n "Enter application name: "
+                read -r app_name
+                cleanup_resources "$app_name"
+                ;;
+            11)
+                echo -n "Enter application name: "
+                read -r app_name
+                generate_k8s_manifests "$app_name"
+                ;;
+            12)
+                return
+                ;;
+            *)
+                echo -e "${RED}Invalid choice${NC}"
+                ;;
+        esac
+        echo
+        echo -n "Press Enter to continue..."
+        read -r
+    done
 }
 
 # Main script
-check_docker
-check_docker_compose
-
-case "$1" in
-    init)
-        init_app_structure "$2"
-        ;;
-    list)
-        list_applications
-        ;;
-    start)
-        start_services "$2"
-        ;;
-    stop)
-        stop_services "$2"
-        ;;
-    restart)
-        restart_services "$2"
-        ;;
-    update)
-        update_services "$2"
-        ;;
-    status)
-        show_status "$2"
-        ;;
-    cleanup)
-        cleanup_resources "$2"
-        ;;
-    migrate)
-        generate_k8s_manifests "$2"
-        ;;
-    backup)
-        backup_application "$2"
-        ;;
-    restore)
-        restore_application "$2" "$3"
-        ;;
-    help|*)
-        show_help
-        ;;
-esac 
+if [ $# -eq 0 ]; then
+    # No arguments, show menu
+    handle_menu
+else
+    # Command-line mode
+    case "$1" in
+        init)
+            init_app_structure "$2"
+            ;;
+        list)
+            list_applications
+            ;;
+        start)
+            start_services "$2"
+            ;;
+        stop)
+            stop_services "$2"
+            ;;
+        restart)
+            restart_services "$2"
+            ;;
+        update)
+            update_services "$2"
+            ;;
+        status)
+            show_status "$2"
+            ;;
+        backup)
+            backup_application "$2"
+            ;;
+        restore)
+            restore_application "$2" "$3"
+            ;;
+        cleanup)
+            cleanup_resources "$2"
+            ;;
+        migrate)
+            generate_k8s_manifests "$2"
+            ;;
+        *)
+            echo -e "${RED}Invalid command${NC}"
+            echo "Usage: $0 [command] [app_name]"
+            echo "Commands: init, list, start, stop, restart, update, status, backup, restore, cleanup, migrate"
+            exit 1
+            ;;
+    esac
+fi 
